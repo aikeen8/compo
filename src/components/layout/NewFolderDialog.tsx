@@ -16,20 +16,22 @@ export function NewFolderDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors mb-6">
+        {/* added dark mode classes to the plus button here */}
+        <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-300 transition-colors">
           <Plus size={24} strokeWidth={2.5} />
         </button>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-[400px] rounded-2xl p-6 border-0 shadow-lg">
+      {/* added dark:bg-slate-800 to fix the pitch black background */}
+      <DialogContent className="sm:max-w-md dark:bg-slate-800 dark:text-slate-100 border-0 dark:border-slate-700 rounded-2xl shadow-xl">
         <DialogHeader>
-          <DialogTitle className="text-slate-800 font-semibold text-base mb-2">New Folder</DialogTitle>
+          <DialogTitle className="text-slate-800 dark:text-slate-100">New Folder</DialogTitle>
         </DialogHeader>
         
-        <div className="flex flex-col gap-5">
-          <Input
-            placeholder="Folder name"
-            className="rounded-xl border-slate-200 h-11 text-sm focus-visible:ring-indigo-500 focus-visible:ring-offset-0"
+        <div className="py-4 flex flex-col gap-5">
+          <Input 
+            placeholder="Folder name" 
+            className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 dark:text-white dark:placeholder-slate-500 focus-visible:ring-brand-500 h-11"
           />
           
           <div className="flex flex-wrap gap-3">
@@ -38,16 +40,18 @@ export function NewFolderDialog() {
                 key={color}
                 onClick={() => setSelectedColor(color)}
                 className={`w-8 h-8 rounded-full ${color} transition-all ${
-                  selectedColor === color ? "ring-2 ring-offset-2 ring-indigo-500 scale-110" : "hover:scale-110"
+                  selectedColor === color 
+                    ? 'ring-2 ring-offset-2 ring-brand-500 dark:ring-offset-slate-800 scale-110 shadow-md' 
+                    : 'hover:scale-110'
                 }`}
               />
             ))}
           </div>
-          
-          <Button className="w-full h-11 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-medium mt-2 shadow-none">
-            Create
-          </Button>
         </div>
+        
+        <Button className="w-full bg-brand-500 hover:bg-brand-600 text-white dark:bg-brand-500 dark:hover:bg-brand-600 h-11 rounded-xl">
+          Create
+        </Button>
       </DialogContent>
     </Dialog>
   )

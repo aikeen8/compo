@@ -11,7 +11,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-white font-sans overflow-hidden">
+    <div className="flex h-screen w-full bg-white dark:bg-slate-900 font-sans overflow-hidden">
       <SidebarLeft onFolderClick={handleFolderClick} />
       
       <SidebarInner folderName="aikeen's Folder" isOpen={isSidebarOpen} />

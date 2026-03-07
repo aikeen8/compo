@@ -34,28 +34,28 @@ export function AppearanceTab() {
             onClick={() => setDraftTheme("light")}
             className={`flex-1 border-2 rounded-xl p-4 flex flex-col items-center gap-3 transition-all ${
               draftTheme === "light" 
-                ? "border-brand-500 bg-brand-50 dark:bg-brand-500/10" 
-                : "border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600"
+                ? "border-brand-500 bg-brand-50 dark:bg-brand-500/10 dark:border-brand-500" 
+                : "border-slate-200 hover:border-slate-300 dark:border-[#1A1A1E] dark:hover:border-[#222327]"
             }`}
           >
-            <div className="w-full h-24 bg-white border border-slate-200 dark:bg-slate-800 dark:border-slate-600 rounded-lg shadow-sm flex items-center justify-center">
+            <div className="w-full h-24 bg-white border border-slate-200 dark:bg-[#1A1A1E] dark:border-[#121214] rounded-lg shadow-sm flex items-center justify-center transition-colors">
               <span className="text-slate-400 dark:text-slate-500 text-xs font-medium">Light UI</span>
             </div>
-            <span className={`text-sm font-semibold ${draftTheme === "light" ? "text-brand-700 dark:text-brand-400" : "text-slate-600 dark:text-slate-300"}`}>Light</span>
+            <span className={`text-sm font-semibold ${draftTheme === "light" ? "text-brand-700 dark:text-brand-400" : "text-slate-600 dark:text-slate-400"}`}>Light</span>
           </button>
 
           <button
             onClick={() => setDraftTheme("dark")}
             className={`flex-1 border-2 rounded-xl p-4 flex flex-col items-center gap-3 transition-all ${
               draftTheme === "dark" 
-                ? "border-brand-500 bg-brand-50 dark:bg-brand-500/10" 
-                : "border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600"
+                ? "border-brand-500 bg-brand-50 dark:bg-brand-500/10 dark:border-brand-500" 
+                : "border-slate-200 hover:border-slate-300 dark:border-[#1A1A1E] dark:hover:border-[#222327]"
             }`}
           >
-            <div className="w-full h-24 bg-slate-900 border border-slate-700 dark:bg-slate-950 dark:border-slate-800 rounded-lg shadow-sm flex items-center justify-center">
+            <div className="w-full h-24 bg-slate-900 border border-slate-700 dark:bg-[#121214] dark:border-[#1A1A1E] rounded-lg shadow-sm flex items-center justify-center transition-colors">
               <span className="text-slate-500 text-xs font-medium">Dark UI</span>
             </div>
-            <span className={`text-sm font-semibold ${draftTheme === "dark" ? "text-brand-700 dark:text-brand-400" : "text-slate-600 dark:text-slate-300"}`}>Dark</span>
+            <span className={`text-sm font-semibold ${draftTheme === "dark" ? "text-brand-700 dark:text-brand-400" : "text-slate-600 dark:text-slate-400"}`}>Dark</span>
           </button>
         </div>
       </div>
@@ -68,7 +68,7 @@ export function AppearanceTab() {
               key={c.name}
               onClick={() => setDraftAccent(c.name)}
               className={`w-10 h-10 rounded-full transition-all ${c.bg} ${
-                draftAccent === c.name ? `ring-2 ring-offset-2 ${c.ring} dark:ring-offset-slate-800 scale-110 shadow-md` : "hover:scale-110"
+                draftAccent === c.name ? `ring-2 ring-offset-2 ${c.ring} dark:ring-offset-[#222327] scale-110 shadow-md` : "hover:scale-110"
               }`}
             />
           ))}
@@ -100,10 +100,10 @@ export function AppearanceTab() {
         </p>
       </div>
 
-      <div className="border-t border-slate-200 dark:border-slate-700 pt-6 flex justify-end">
+      <div className="border-t border-slate-200 dark:border-[#1A1A1E] pt-6 flex justify-end transition-colors">
         <button 
           onClick={handleApply}
-          className="bg-brand-500 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors"
+          className="bg-brand-500 text-slate-900 dark:text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors"
         >
           Apply Changes
         </button>

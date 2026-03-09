@@ -8,6 +8,10 @@ export type ItemType = {
   name: string;
   type: 'note' | 'todo' | 'pomodoro';
   isPrivate: boolean;
+  title: string;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export type CategoryType = {
@@ -20,7 +24,7 @@ export type FolderType = {
   id: string;
   name: string;
   color: string;
-  isPrivate: boolean; // added privacy state
+  isPrivate: boolean;
   categories: CategoryType[];
 }
 
@@ -40,18 +44,19 @@ export default function Dashboard() {
   }
 
   const handleAddFolder = (name: string, color: string) => {
+    const now = Date.now();
     const defaultCategory: CategoryType = {
-      id: Date.now().toString() + '-cat',
+      id: now.toString() + '-cat',
       name: 'MAIN',
       items: [
-        { id: Date.now().toString() + '-i1', name: 'notes', type: 'note', isPrivate: false },
-        { id: Date.now().toString() + '-i2', name: 'to-do-list', type: 'todo', isPrivate: false },
-        { id: Date.now().toString() + '-i3', name: 'pomodoro', type: 'pomodoro', isPrivate: false },
+        { id: now.toString() + '-i1', name: 'notes', type: 'note', isPrivate: false, title: '', content: '', createdAt: now, updatedAt: now },
+        { id: now.toString() + '-i2', name: 'to-do-list', type: 'todo', isPrivate: false, title: '', content: '', createdAt: now, updatedAt: now },
+        { id: now.toString() + '-i3', name: 'pomodoro', type: 'pomodoro', isPrivate: false, title: '', content: '', createdAt: now, updatedAt: now },
       ]
     }
 
     const newFolder: FolderType = { 
-      id: Date.now().toString(), 
+      id: now.toString(), 
       name, 
       color,
       isPrivate: false,
@@ -63,7 +68,6 @@ export default function Dashboard() {
     setIsSidebarOpen(true)
   }
 
-  // new handlers for the dropdown menu
   const handleRenameFolder = (folderId: string, newName: string) => {
     setFolders(folders.map(folder => 
       folder.id === folderId ? { ...folder, name: newName } : folder
@@ -98,13 +102,14 @@ export default function Dashboard() {
   }
 
   const handleAddItem = (folderId: string, categoryId: string, name: string, type: 'note' | 'todo' | 'pomodoro', isPrivate: boolean) => {
+    const now = Date.now();
     setFolders(folders.map(folder => {
       if (folder.id === folderId) {
         return {
           ...folder,
           categories: folder.categories.map(cat => {
             if (cat.id === categoryId) {
-              return { ...cat, items: [...cat.items, { id: Date.now().toString(), name, type, isPrivate }] }
+              return { ...cat, items: [...cat.items, { id: now.toString(), name, type, isPrivate, title: '', content: '', createdAt: now, updatedAt: now }] }
             }
             return cat;
           })
@@ -131,7 +136,29 @@ export default function Dashboard() {
     }))
   }
 
+  const handleUpdateItemContent = (itemId: string, title: string, content: string) => {
+    const now = Date.now();
+    setFolders(folders.map(folder => ({
+      ...folder,
+      categories: folder.categories.map(cat => ({
+        ...cat,
+        items: cat.items.map(item => item.id === itemId ? { ...item, title, content, updatedAt: now } : item)
+      }))
+    })))
+  }
+
   const activeFolder = folders.find(f => f.id === activeFolderId)
+  
+  let activeItem: ItemType | null = null;
+  if (activeFolder && activeItemId) {
+    for (const cat of activeFolder.categories) {
+      const found = cat.items.find(i => i.id === activeItemId);
+      if (found) {
+        activeItem = found;
+        break;
+      }
+    }
+  }
 
   return (
     <div className="flex h-screen w-full bg-white dark:bg-[#222327] font-sans overflow-hidden">
@@ -156,7 +183,10 @@ export default function Dashboard() {
         onDeleteItem={handleDeleteItem}
       />
       
-      <MainContent />
+      <MainContent 
+        activeItem={activeItem} 
+        onUpdateItem={handleUpdateItemContent} 
+      />
     </div>
   )
 }

@@ -71,7 +71,12 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
   useEffect(() => {
     if (activeItem && editor) {
       if (editor.getHTML() !== activeItem.content) {
-        editor.commands.setContent(activeItem.content || "");
+        // Automatically start with a checkbox if it's a brand new empty to-do list
+        if (activeItem.type === 'todo' && !activeItem.content) {
+          editor.commands.setContent('<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p></p></li></ul>');
+        } else {
+          editor.commands.setContent(activeItem.content || "");
+        }
       }
     }
   }, [activeItem, editor])
@@ -106,6 +111,8 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
   if (activeItem.type === 'pomodoro') {
     return <PomodoroView />
   }
+
+  const isTodo = activeItem.type === 'todo';
 
   return (
     <main className="flex-1 h-screen bg-white dark:bg-[#222327] transition-colors duration-200 overflow-y-auto flex flex-col">
@@ -220,12 +227,16 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
               </div>
             </div>
             
-            <div className="w-px h-6 bg-slate-200 dark:bg-[#121214] mx-2"></div>
-            
-            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('left').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'left' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignLeft size={16} /> </button>
-            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('center').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'center' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignCenter size={16} /> </button>
-            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('right').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'right' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignRight size={16} /> </button>
-            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('justify').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'justify' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignJustify size={16} /> </button>
+            {!isTodo && (
+              <>
+                <div className="w-px h-6 bg-slate-200 dark:bg-[#121214] mx-2"></div>
+                
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('left').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'left' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignLeft size={16} /> </button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('center').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'center' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignCenter size={16} /> </button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('right').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'right' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignRight size={16} /> </button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('justify').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'justify' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignJustify size={16} /> </button>
+              </>
+            )}
             
             <div className="w-px h-6 bg-slate-200 dark:bg-[#121214] mx-2"></div>
 
@@ -237,7 +248,7 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
       <div className="max-w-4xl w-full mx-auto px-12 pt-12 pb-20 md:px-20 flex flex-col flex-1">
         <input
           type="text"
-          placeholder="Note Title"
+          placeholder={isTodo ? "To-do List Title" : "Note Title"}
           value={localTitle}
           onChange={handleTitleChange}
           className="text-4xl font-bold bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder-slate-300 dark:placeholder-slate-600 mb-2 w-full transition-colors pb-3"

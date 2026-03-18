@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react"
-import { Mail, Lock, ArrowRight } from "lucide-react"
+import { Mail, Lock, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { supabase } from "../lib/supabase"
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const [logoText, setLogoText] = useState("")
@@ -21,11 +25,66 @@ export default function Login() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // temporary simulation of login success
-    console.log("form submitted:", { email, password, isSignUp })
-    navigate("/")
+    setError(null)
+    setMessage(null)
+    setIsLoading(true)
+
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        })
+        
+        if (error) throw error
+        
+        setMessage("Account created! Please check your email for the verification link.")
+        setPassword("")
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        
+        if (error) throw error
+        
+        navigate("/")
+      }
+    } catch (err) {
+      const authError = err as Error;
+      setError(authError.message || "An error occurred. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // --- NEW: Google Login Handler ---
+  const handleGoogleLogin = async () => {
+    setError(null)
+    setIsLoading(true)
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          // this sends them back to your app after google authenticates them
+          redirectTo: window.location.origin 
+        }
+      })
+      if (error) throw error
+    } catch (err) {
+      const authError = err as Error;
+      setError(authError.message || "An error occurred with Google login.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const toggleMode = () => {
+    setIsSignUp(!isSignUp)
+    setError(null)
+    setMessage(null)
   }
 
   return (
@@ -38,14 +97,36 @@ export default function Login() {
         .animate-blink {
           animation: blink 1s step-end infinite;
         }
+
+        @keyframes shine {
+          0% { background-position: 0% 100%; }
+          100% { background-position: 0% 0%; }
+        }
+        .animate-shine {
+          --shine-base: #cbd5e1;
+          --shine-highlight: #ffffff;
+          background: linear-gradient(
+            to bottom,
+            var(--shine-base) 40%,
+            var(--shine-highlight) 50%,
+            var(--shine-base) 60%
+          );
+          background-size: 100% 300%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: shine 3s linear infinite;
+        }
+        .dark .animate-shine {
+          --shine-base: #2B2D31;
+          --shine-highlight: #64748b;
+        }
       `}</style>
       
       <div className="flex items-stretch justify-center gap-6 md:gap-8 w-full max-w-2xl">
         
-        {/* vertical tagline */}
         <div className="hidden sm:flex items-center justify-center pt-16">
           <p 
-            className="text-slate-300 dark:text-[#2B2D31] font-bold uppercase tracking-[0.4em] text-[11px] whitespace-nowrap"
+            className="animate-shine font-bold uppercase tracking-[0.4em] text-[11px] whitespace-nowrap"
             style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
           >
             a place to compose.
@@ -56,13 +137,10 @@ export default function Login() {
           
           <div className="flex justify-center mb-8 h-10">
             <div className="relative flex items-center">
-              {/* invisible placeholder to keep perfect centering while typing */}
               <h1 className="text-4xl font-extrabold tracking-tight flex items-center opacity-0 pointer-events-none select-none whitespace-nowrap">
                 compo<span className="text-brand-500">.</span>
                 <span className="w-1.5 h-8 ml-1"></span>
               </h1>
-              
-              {/* actual typing text positioned left-to-right */}
               <h1 className="absolute left-0 text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center whitespace-nowrap">
                 {logoText}
                 {logoText === fullLogoText && <span className="text-brand-500">.</span>}
@@ -80,7 +158,27 @@ export default function Login() {
                 {isSignUp ? "Sign up to start organizing your workspace." : "Enter your details to access your workspace."}
               </p>
 
-              <button className="w-full flex items-center justify-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-[#222327] dark:hover:bg-[#2B2D31] text-slate-700 dark:text-slate-200 py-3 rounded-xl font-medium transition-all mb-6 border border-slate-200 dark:border-[#121214]">
+              {error && (
+                <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 flex items-start gap-3 text-red-600 dark:text-red-400">
+                  <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                  <p className="text-sm font-medium">{error}</p>
+                </div>
+              )}
+              
+              {message && (
+                <div className="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-start gap-3 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
+                  <p className="text-sm font-medium">{message}</p>
+                </div>
+              )}
+
+              {/* --- NEW: Attached onClick handler --- */}
+              <button 
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-[#222327] dark:hover:bg-[#2B2D31] text-slate-700 dark:text-slate-200 py-3 rounded-xl font-medium transition-all mb-6 border border-slate-200 dark:border-[#121214] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -108,9 +206,10 @@ export default function Login() {
                     <input
                       type="email"
                       required
+                      disabled={isLoading}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all disabled:opacity-50"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -127,9 +226,10 @@ export default function Login() {
                     <input
                       type="password"
                       required
+                      disabled={isLoading}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all disabled:opacity-50"
                       placeholder="••••••••"
                     />
                   </div>
@@ -137,18 +237,26 @@ export default function Login() {
 
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-slate-900 dark:text-white py-3 rounded-xl font-semibold transition-all active:scale-[0.98] mt-2"
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-slate-900 dark:text-white py-3 rounded-xl font-semibold transition-all active:scale-[0.98] mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {isSignUp ? "Create Account" : "Sign In"}
-                  <ArrowRight size={18} />
+                  {isLoading ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <>
+                      {isSignUp ? "Create Account" : "Sign In"}
+                      <ArrowRight size={18} />
+                    </>
+                  )}
                 </button>
               </form>
 
               <div className="mt-8 flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <p>{isSignUp ? "Already have an account?" : "Don't have an account?"}</p>
                 <button
-                  onClick={() => setIsSignUp(!isSignUp)}
-                  className="font-bold text-slate-800 hover:text-brand-500 dark:text-slate-200 dark:hover:text-brand-400 transition-colors"
+                  onClick={toggleMode}
+                  disabled={isLoading}
+                  className="font-bold text-slate-800 hover:text-brand-500 dark:text-slate-200 dark:hover:text-brand-400 transition-colors disabled:opacity-50"
                   type="button"
                 >
                   {isSignUp ? "Sign in" : "Sign up"}

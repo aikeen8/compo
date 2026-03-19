@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Folder, FolderOpen, LogOut } from "lucide-react"
 import { NewFolderDialog } from "./NewFolderDialog"
 import { SettingsModal } from "./SettingsModal"
@@ -9,6 +10,7 @@ interface SidebarLeftProps {
   isSidebarOpen: boolean;
   onFolderClick: (id: string) => void;
   onAddFolder: (name: string, color: string) => void;
+  onLogout: () => void;
 }
 
 const folderStyles: Record<string, { active: string, inactive: string }> = {
@@ -24,61 +26,100 @@ const folderStyles: Record<string, { active: string, inactive: string }> = {
   slate: { active: "bg-slate-500 text-slate-900 dark:text-white", inactive: "bg-slate-100 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400 hover:bg-slate-500 hover:text-white dark:hover:bg-slate-500 dark:hover:text-white" }
 }
 
-export function SidebarLeft({ folders, activeFolderId, isSidebarOpen, onFolderClick, onAddFolder }: SidebarLeftProps) {
+export function SidebarLeft({ folders, activeFolderId, isSidebarOpen, onFolderClick, onAddFolder, onLogout }: SidebarLeftProps) {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+
   return (
-    <aside className="w-[80px] h-screen flex flex-col items-center py-6 bg-slate-50 dark:bg-[#121214] border-r border-slate-100 dark:border-[#1A1A1E] flex-shrink-0 z-10 relative transition-colors duration-200">
-      
-      <div className="flex flex-col gap-4 flex-1 w-full items-center overflow-y-auto overflow-x-hidden scrollbar-none">
+    <>
+      <aside className="w-[80px] h-screen flex flex-col items-center py-6 bg-slate-50 dark:bg-[#121214] border-r border-slate-100 dark:border-[#1A1A1E] flex-shrink-0 z-10 relative transition-colors duration-200">
         
-        <NewFolderDialog onAddFolder={onAddFolder} />
+        <div className="flex flex-col gap-4 flex-1 w-full items-center overflow-y-auto overflow-x-hidden scrollbar-none">
+          
+          <NewFolderDialog onAddFolder={onAddFolder} />
 
-        <div className="w-8 h-[2px] bg-slate-200 dark:bg-[#1A1A1E] rounded-full my-1 transition-colors flex-shrink-0"></div>
+          <div className="w-8 h-[2px] bg-slate-200 dark:bg-[#1A1A1E] rounded-full my-1 transition-colors flex-shrink-0"></div>
 
-        {folders.map((folder) => {
-          const isActive = folder.id === activeFolderId;
-          const styles = folderStyles[folder.color] || folderStyles.indigo;
+          {folders.map((folder) => {
+            const isActive = folder.id === activeFolderId;
+            const styles = folderStyles[folder.color] || folderStyles.indigo;
 
-          return (
-            <div key={folder.id} className="relative w-full flex justify-center group flex-shrink-0">
-              <div 
-                className={`absolute left-0 bg-slate-800 dark:bg-slate-200 rounded-r-full transition-all duration-300 w-1 ${
-                  isActive && isSidebarOpen
-                    ? "h-10 top-1" 
-                    : isActive 
-                      ? "h-5 top-3.5"
-                      : "h-0 top-6 group-hover:h-5 group-hover:top-3.5 opacity-0 group-hover:opacity-100"
-                }`}
-              ></div>
-              
-              <button 
-                onClick={() => onFolderClick(folder.id)}
-                className={`w-12 h-12 flex items-center justify-center transition-all duration-300 ${
-                  isActive
-                    ? `rounded-xl shadow-md ${styles.active}`
-                    : `rounded-[24px] hover:rounded-xl ${styles.inactive}`
-                }`}
-                title={folder.name}
+            return (
+              <div key={folder.id} className="relative w-full flex justify-center group flex-shrink-0">
+                <div 
+                  className={`absolute left-0 bg-slate-800 dark:bg-slate-200 rounded-r-full transition-all duration-300 w-1 ${
+                    isActive && isSidebarOpen
+                      ? "h-10 top-1" 
+                      : isActive 
+                        ? "h-5 top-3.5"
+                        : "h-0 top-6 group-hover:h-5 group-hover:top-3.5 opacity-0 group-hover:opacity-100"
+                  }`}
+                ></div>
+                
+                <button 
+                  onClick={() => onFolderClick(folder.id)}
+                  className={`w-12 h-12 flex items-center justify-center transition-all duration-300 ${
+                    isActive
+                      ? `rounded-xl shadow-md ${styles.active}`
+                      : `rounded-[24px] hover:rounded-xl ${styles.inactive}`
+                  }`}
+                  title={folder.name}
+                >
+                  {isActive && isSidebarOpen ? (
+                    <FolderOpen size={24} fill="none" strokeWidth={2} />
+                  ) : (
+                    <Folder size={24} fill="none" strokeWidth={2} />
+                  )}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="flex flex-col gap-5 items-center w-full mt-auto pt-4 flex-shrink-0">
+          <div className="w-8 h-px bg-slate-200 dark:bg-[#1A1A1E] transition-colors"></div>
+          
+          <SettingsModal />
+          
+          <button 
+            onClick={() => setShowLogoutConfirm(true)}
+            className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
+            title="Log out"
+          >
+            <LogOut size={22} />
+          </button>
+        </div>
+      </aside>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-3xl p-6 w-full max-w-sm shadow-xl">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+              Log out of compo?
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              You will need to sign back in to access your workspace.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#222327] transition-colors"
               >
-                {isActive && isSidebarOpen ? (
-                  <FolderOpen size={24} fill="none" strokeWidth={2} />
-                ) : (
-                  <Folder size={24} fill="none" strokeWidth={2} />
-                )}
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(false)
+                  onLogout()
+                }}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium bg-red-500 hover:bg-red-600 text-white transition-colors"
+              >
+                Log out
               </button>
             </div>
-          )
-        })}
-      </div>
-
-      <div className="flex flex-col gap-5 items-center w-full mt-auto pt-4 flex-shrink-0">
-        <div className="w-8 h-px bg-slate-200 dark:bg-[#1A1A1E] transition-colors"></div>
-        
-        <SettingsModal />
-        
-        <button className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors">
-          <LogOut size={22} />
-        </button>
-      </div>
-    </aside>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

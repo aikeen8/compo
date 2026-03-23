@@ -1,14 +1,15 @@
 import { useState } from "react"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { Settings, User, Palette, Timer, HardDrive } from "lucide-react"
+import { Settings, User, Palette, HardDrive, Trash2 } from "lucide-react"
 import { AppearanceTab } from "../settings/AppearanceTab"
 import { AccountTab } from "../settings/AccountTab"
+import { TrashTab } from "../settings/TrashTab"
 
 const tabs = [
   { id: "account", label: "My Account", icon: User },
   { id: "appearance", label: "Appearance", icon: Palette },
-  { id: "pomodoro", label: "Pomodoro", icon: Timer },
-  { id: "data", label: "Data & Privacy", icon: HardDrive },
+  { id: "trash", label: "Trash", icon: Trash2 },
+  { id: "data", label: "Data & Privacy", icon: HardDrive }
 ]
 
 export function SettingsModal() {
@@ -48,8 +49,8 @@ export function SettingsModal() {
         <div className="flex-1 bg-white dark:bg-[#222327] p-10 overflow-y-auto transition-colors">
           {activeTab === "account" && <AccountTab />}
           {activeTab === "appearance" && <AppearanceTab />}
-          {activeTab === "pomodoro" && <p>pomodoro settings coming soon</p>}
-          {activeTab === "data" && <p>data settings coming soon</p>}
+          {activeTab === "trash" && <TrashTab />}
+          {activeTab === "data" && <p className="text-slate-500">data settings coming soon</p>}
         </div>
       </DialogContent>
     </Dialog>

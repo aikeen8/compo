@@ -41,12 +41,11 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
 
-  // Wrapped in useCallback to satisfy React's strict dependency rules
   const fetchWorkspace = useCallback(async (userId: string) => {
-    const [foldersRes, categoriesRes, itemsRes] = await Promise.all([
-      supabase.from('folders').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+    let [foldersRes, categoriesRes, itemsRes] = await Promise.all([
+      supabase.from('folders').select('*').eq('user_id', userId).neq('is_deleted', true).order('created_at', { ascending: true }),
       supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-      supabase.from('items').select('*').eq('user_id', userId).order('created_at', { ascending: true })
+      supabase.from('items').select('*').eq('user_id', userId).neq('is_deleted', true).order('created_at', { ascending: true })
     ])
 
     if (foldersRes.error || categoriesRes.error || itemsRes.error) {
@@ -54,10 +53,59 @@ export default function Dashboard() {
       return
     }
 
-    const formattedFolders: FolderType[] = foldersRes.data.map(f => {
-      const fCats = categoriesRes.data.filter(c => c.folder_id === f.id)
+    if (foldersRes.data.length === 0) {
+      const { data: fData } = await supabase.from('folders')
+        .insert({ user_id: userId, name: 'Welcome', color: 'indigo', is_private: false })
+        .select().single()
+      
+      const { data: cData } = await supabase.from('categories')
+        .insert({ user_id: userId, folder_id: fData.id, name: 'Getting Started' })
+        .select().single()
+
+      const guideHTML = `
+        <h2>welcome to compo! 🎉</h2>
+        <p>i built compo to be a quiet place for your work. it keeps your notes, tasks, and time tracking all in one spot. here is how everything works.</p>
+        <p></p>
+        <h3>📁 folders & categories</h3>
+        <p>your workspace uses folders and categories to keep things neat. folders are the colorful icons on the far left. click the <strong>+</strong> button there to make a new one. inside a folder, you have categories. these act like dividers. use them to separate your personal stuff from your work projects.</p>
+        <p></p>
+        <h3>📝 notes, tasks, and timers</h3>
+        <p>hover your mouse over any category name in the sidebar. a hidden <strong>+</strong> button will show up. click it to add an item to that category. you can add a blank note, an interactive to-do list, or a pomodoro focus timer. everything you type saves automatically to your database.</p>
+        <p></p>
+        <h3>⚙️ settings & themes</h3>
+        <p>click the gear icon in the bottom left corner to open settings. from there, you can turn on dark mode, swap your accent color, and manage your account.</p>
+        <p></p>
+        <h3>🗑️ cleaning up</h3>
+        <p>this guide is a real note living in your database. i put it here so you could test things out. you can edit this text, click over to check off the dummy tasks, or run the timer. when you are ready for a clean slate, just hover over the "Getting Started" category in the sidebar and click the trash can to delete this entire folder.</p>
+        <p></p>
+        <p>#compo #focus #workspace</p>
+      `
+
+      await supabase.from('items').insert([
+        { user_id: userId, category_id: cData.id, name: 'how to use compo', type: 'note', title: 'Welcome to compo', content: guideHTML },
+        { user_id: userId, category_id: cData.id, name: 'my tasks', type: 'todo' },
+        { user_id: userId, category_id: cData.id, name: 'focus timer', type: 'pomodoro' }
+      ])
+
+      const newFetch = await Promise.all([
+        supabase.from('folders').select('*').eq('user_id', userId).neq('is_deleted', true).order('created_at', { ascending: true }),
+        supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+        supabase.from('items').select('*').eq('user_id', userId).neq('is_deleted', true).order('created_at', { ascending: true })
+      ])
+      
+      foldersRes = newFetch[0]
+      categoriesRes = newFetch[1]
+      itemsRes = newFetch[2]
+    }
+
+    const safeFolders = foldersRes.data || []
+    const safeCategories = categoriesRes.data || []
+    const safeItems = itemsRes.data || []
+
+    const formattedFolders: FolderType[] = safeFolders.map(f => {
+      const fCats = safeCategories.filter(c => c.folder_id === f.id)
       const categories: CategoryType[] = fCats.map(c => {
-        const cItems = itemsRes.data.filter(i => i.category_id === c.id)
+        const cItems = safeItems.filter(i => i.category_id === c.id)
         const items: ItemType[] = cItems.map(i => ({
           id: i.id,
           name: i.name,
@@ -149,9 +197,14 @@ export default function Dashboard() {
     await supabase.from('folders').update({ name: newName }).eq('id', folderId)
   }
 
-  const handleUpdateFolderPrivacy = async (folderId: string, isPrivate: boolean) => {
-    setFolders(folders.map(f => f.id === folderId ? { ...f, isPrivate } : f))
-    await supabase.from('folders').update({ is_private: isPrivate }).eq('id', folderId)
+  const handleDeleteFolder = async (folderId: string) => {
+    setFolders(folders.filter(f => f.id !== folderId))
+    if (activeFolderId === folderId) {
+      setActiveFolderId(null)
+      setActiveItemId(null)
+      setIsSidebarOpen(false)
+    }
+    await supabase.from('folders').update({ is_deleted: true }).eq('id', folderId)
   }
 
   const handleAddCategory = async (folderId: string, categoryName: string) => {
@@ -231,7 +284,7 @@ export default function Dashboard() {
       }
       return folder
     }))
-    await supabase.from('items').delete().eq('id', itemId)
+    await supabase.from('items').update({ is_deleted: true }).eq('id', itemId)
   }
 
   const handleUpdateItemContent = async (itemId: string, title: string, content: string) => {
@@ -288,7 +341,7 @@ export default function Dashboard() {
         activeItemId={activeItemId}
         onSelectItem={setActiveItemId}
         onRenameFolder={handleRenameFolder}
-        onUpdateFolderPrivacy={handleUpdateFolderPrivacy}
+        onDeleteFolder={handleDeleteFolder}
         onAddCategory={handleAddCategory}
         onDeleteCategory={handleDeleteCategory}
         onAddItem={handleAddItem}

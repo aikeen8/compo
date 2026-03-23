@@ -87,10 +87,14 @@ export function SidebarLeft({ folders, activeFolderId, isSidebarOpen, onFolderCl
           >
             <LogOut size={22} />
           </button>
+
+          {/* Version number added here */}
+          <span className="text-[10px] font-medium text-slate-300 dark:text-slate-600 mt-2">
+            v1.0.0
+          </span>
         </div>
       </aside>
 
-      {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-3xl p-6 w-full max-w-sm shadow-xl">

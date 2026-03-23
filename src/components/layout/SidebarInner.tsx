@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from "react"
-import { ChevronDown, Trash2, FileText, CheckSquare, Timer, Lock, X, FolderPlus, Pencil, Shield } from "lucide-react"
+import { ChevronDown, Trash2, FileText, CheckSquare, Timer, Lock, X, FolderPlus, Pencil } from "lucide-react"
 import { FolderType } from "../../pages/Dashboard"
 import { CreateCategoryModal } from "./CreateCategoryModal"
 import { CreateItemModal } from "./CreateItemModal"
 import { RenameFolderModal } from "./RenameFolderModal"
-import { FolderPrivacyModal } from "./FolderPrivacyModal"
 
 interface SidebarInnerProps {
   isOpen: boolean;
@@ -12,7 +11,7 @@ interface SidebarInnerProps {
   activeItemId: string | null;
   onSelectItem: (id: string) => void;
   onRenameFolder: (folderId: string, newName: string) => void;
-  onUpdateFolderPrivacy: (folderId: string, isPrivate: boolean) => void;
+  onDeleteFolder: (folderId: string) => void;
   onAddCategory: (folderId: string, name: string) => void;
   onDeleteCategory: (folderId: string, categoryId: string) => void;
   onAddItem: (folderId: string, categoryId: string, name: string, type: 'note' | 'todo' | 'pomodoro', isPrivate: boolean) => void;
@@ -25,7 +24,7 @@ export function SidebarInner({
   activeItemId, 
   onSelectItem,
   onRenameFolder,
-  onUpdateFolderPrivacy,
+  onDeleteFolder,
   onAddCategory, 
   onDeleteCategory, 
   onAddItem, 
@@ -37,7 +36,7 @@ export function SidebarInner({
   
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -118,11 +117,11 @@ export function SidebarInner({
                 <div className="h-px bg-slate-200 dark:bg-[#1A1A1E] my-1 mx-1"></div>
 
                 <button 
-                  onClick={() => { setIsMenuOpen(false); setPrivacyModalOpen(true); }}
-                  className="flex items-center justify-between px-2 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-brand-500 hover:text-slate-900 dark:hover:text-white rounded transition-colors group"
+                  onClick={() => { setIsMenuOpen(false); setDeleteModalOpen(true); }}
+                  className="flex items-center justify-between px-2 py-1.5 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white rounded transition-colors group"
                 >
-                  Privacy Settings
-                  <Shield size={14} className="opacity-70 group-hover:opacity-100" />
+                  Delete Folder
+                  <Trash2 size={14} className="opacity-70 group-hover:opacity-100" />
                 </button>
                 
               </div>
@@ -212,17 +211,42 @@ export function SidebarInner({
         currentName={folder.name} 
         onRename={(name) => onRenameFolder(folder.id, name)} 
       />
+      
       <CreateCategoryModal 
         open={categoryModalOpen} 
         onOpenChange={setCategoryModalOpen} 
         onAddCategory={(name) => onAddCategory(folder.id, name)} 
       />
-      <FolderPrivacyModal 
-        open={privacyModalOpen} 
-        onOpenChange={setPrivacyModalOpen} 
-        isPrivate={folder.isPrivate || false} 
-        onSave={(priv) => onUpdateFolderPrivacy(folder.id, priv)} 
-      />
+
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-3xl p-6 w-full max-w-sm shadow-xl">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+              Delete folder?
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              are you sure you want to delete <strong>{folder.name}</strong>? it will be moved to the trash bin where you can restore it within 30 days.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#222327] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setDeleteModalOpen(false)
+                  onDeleteFolder(folder.id)
+                }}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium bg-rose-500 hover:bg-rose-600 text-white transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

@@ -1,0 +1,113 @@
+import { useState, useEffect, useCallback } from "react"
+import { supabase } from "../../lib/supabase"
+import { Loader2, RotateCcw, Trash2, FileText, Folder } from "lucide-react"
+
+type TrashItem = {
+  id: string;
+  name: string;
+}
+
+export function TrashTab() {
+  const [deletedItems, setDeletedItems] = useState<TrashItem[]>([])
+  const [deletedFolders, setDeletedFolders] = useState<TrashItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchTrash = useCallback(async () => {
+    // removed setIsLoading(true) here to fix the linter error
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const [foldersRes, itemsRes] = await Promise.all([
+      supabase.from('folders').select('*').eq('user_id', user.id).eq('is_deleted', true),
+      supabase.from('items').select('*').eq('user_id', user.id).eq('is_deleted', true)
+    ])
+
+    setDeletedFolders(foldersRes.data || [])
+    setDeletedItems(itemsRes.data || [])
+    setIsLoading(false)
+  }, [])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchTrash()
+  }, [fetchTrash])
+
+  const handleRestoreFolder = async (id: string) => {
+    await supabase.from('folders').update({ is_deleted: false }).eq('id', id)
+    fetchTrash()
+  }
+
+  const handleRestoreItem = async (id: string) => {
+    await supabase.from('items').update({ is_deleted: false }).eq('id', id)
+    fetchTrash()
+  }
+
+  const handlePermanentDeleteFolder = async (id: string) => {
+    await supabase.from('folders').delete().eq('id', id)
+    fetchTrash()
+  }
+
+  const handlePermanentDeleteItem = async (id: string) => {
+    await supabase.from('items').delete().eq('id', id)
+    fetchTrash()
+  }
+
+  if (isLoading) {
+    return <div className="flex justify-center py-10"><Loader2 className="animate-spin text-slate-400" /></div>
+  }
+
+  const isEmpty = deletedFolders.length === 0 && deletedItems.length === 0
+
+  return (
+    <div className="max-w-2xl">
+      <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Trash Bin</h2>
+      <p className="text-slate-500 dark:text-slate-400 mb-8">
+        items here will be permanently deleted after 30 days. you can restore them or delete them immediately.
+      </p>
+
+      {isEmpty ? (
+        <div className="text-center py-10 bg-slate-50 dark:bg-[#1A1A1E] rounded-2xl border border-dashed border-slate-200 dark:border-[#222327]">
+          <p className="text-slate-400 dark:text-slate-500">your trash is empty.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          
+          {deletedFolders.map(folder => (
+            <div key={folder.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#1A1A1E] rounded-xl border border-slate-100 dark:border-[#222327]">
+              <div className="flex items-center gap-3">
+                <Folder className="text-slate-400" size={20} />
+                <span className="font-medium text-slate-700 dark:text-slate-200">{folder.name}</span>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => handleRestoreFolder(folder.id)} className="p-2 text-slate-400 hover:text-brand-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors" title="Restore">
+                  <RotateCcw size={16} />
+                </button>
+                <button onClick={() => handlePermanentDeleteFolder(folder.id)} className="p-2 text-slate-400 hover:text-rose-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors" title="Permanently Delete">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {deletedItems.map(item => (
+            <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#1A1A1E] rounded-xl border border-slate-100 dark:border-[#222327]">
+              <div className="flex items-center gap-3">
+                <FileText className="text-slate-400" size={20} />
+                <span className="font-medium text-slate-700 dark:text-slate-200">{item.name}</span>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => handleRestoreItem(item.id)} className="p-2 text-slate-400 hover:text-brand-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors" title="Restore">
+                  <RotateCcw size={16} />
+                </button>
+                <button onClick={() => handlePermanentDeleteItem(item.id)} className="p-2 text-slate-400 hover:text-rose-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors" title="Permanently Delete">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+
+        </div>
+      )}
+    </div>
+  )
+}

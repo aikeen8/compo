@@ -6,13 +6,14 @@ import TextAlign from '@tiptap/extension-text-align'
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
 import { Bold, Italic, Strikethrough, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, ListTodo, FileText, Lock, ShieldAlert, Loader2, Eye, EyeOff } from "lucide-react"
-import { ItemType } from "../../pages/Dashboard"
+import { ItemType, FolderType } from "../../pages/Dashboard"
 import { useTheme } from "../ThemeProvider"
 import { PomodoroView } from "../pomodoro/PomodoroView"
 import { supabase } from "../../lib/supabase"
 
 interface MainContentProps {
   activeItem?: ItemType | null;
+  activeFolder?: FolderType | null;
   onUpdateItem?: (id: string, title: string, content: string) => void;
 }
 
@@ -36,27 +37,32 @@ const accentHexMap: Record<string, string> = {
   slate: '#64748b'
 }
 
-export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
+export function MainContent({ activeItem, activeFolder, onUpdateItem }: MainContentProps) {
   const { accent, customColor } = useTheme()
   const activeColor = accent === 'custom' ? customColor : (accentHexMap[accent] || '#6366f1')
 
   const [localTitle, setLocalTitle] = useState("")
   const [prevItemId, setPrevItemId] = useState(activeItem?.id)
 
-  // lock screen states
-  const [isUnlocked, setIsUnlocked] = useState(false)
+  const [unlockedId, setUnlockedId] = useState<string | null>(null)
   const [savedPin, setSavedPin] = useState<string | null>(null)
   const [isFetchingPin, setIsFetchingPin] = useState(false)
   const [pinInput, setPinInput] = useState("")
   const [showPin, setShowPin] = useState(false)
 
+  const needsPin = activeItem?.isPrivate || activeFolder?.isPrivate;
+  
+  const isUnlocked =
+    (!activeFolder?.isPrivate || unlockedId === activeFolder?.id) &&
+    (!activeItem?.isPrivate || unlockedId === activeItem?.id || unlockedId === activeFolder?.id);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsUnlocked(false)
     setPinInput("")
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowPin(false)
     
-    if (activeItem?.isPrivate) {
+    if (needsPin) {
       setIsFetchingPin(true)
       const fetchPin = async () => {
         const { data: { user } } = await supabase.auth.getUser()
@@ -68,7 +74,7 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
       }
       fetchPin()
     }
-  }, [activeItem?.id, activeItem?.isPrivate])
+  }, [activeItem?.id, activeFolder?.id, needsPin])
 
   if (activeItem?.id !== prevItemId) {
     setPrevItemId(activeItem?.id);
@@ -124,19 +130,7 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
     }).format(new Date(timestamp))
   }
 
-  if (!activeItem) {
-    return (
-      <main className="flex-1 h-screen bg-white dark:bg-[#222327] transition-colors duration-200 flex items-center justify-center">
-        <div className="flex flex-col items-center text-slate-400 dark:text-slate-500">
-          <FileText size={48} strokeWidth={1.5} className="mb-4 text-slate-300 dark:text-slate-600" />
-          <p className="text-sm">Select or create an item to get started</p>
-        </div>
-      </main>
-    )
-  }
-
-  // --- lock screen intercept ---
-  if (activeItem.isPrivate && !isUnlocked) {
+  if (needsPin && !isUnlocked) {
     if (isFetchingPin) {
       return (
         <main className="flex-1 h-screen bg-white dark:bg-[#222327] flex items-center justify-center">
@@ -151,7 +145,7 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
           <ShieldAlert size={48} strokeWidth={1.5} className="text-amber-500 mb-4" />
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">PIN Required</h2>
           <p className="text-slate-500 dark:text-slate-400 max-w-sm text-sm leading-relaxed">
-            you made this item private, but you haven't set up a security PIN yet. please go to settings {'>'} data & privacy to set your 4-digit PIN.
+            this item is private, but you haven't set up a security PIN yet. please go to settings {'>'} data & privacy to set your 4-digit PIN.
           </p>
         </main>
       )
@@ -173,7 +167,10 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
                 setPinInput(val)
                 if (val.length === 4) {
                   if (val === savedPin) {
-                    setIsUnlocked(true)
+                    let newUnlockId = null;
+                    if (activeFolder?.isPrivate) newUnlockId = activeFolder.id;
+                    else if (activeItem?.isPrivate) newUnlockId = activeItem.id;
+                    setUnlockedId(newUnlockId)
                   } else {
                     setTimeout(() => setPinInput(""), 300)
                   }
@@ -188,6 +185,17 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
               {showPin ? <EyeOff size={22} /> : <Eye size={22} />}
             </button>
           </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (!activeItem) {
+    return (
+      <main className="flex-1 h-screen bg-white dark:bg-[#222327] transition-colors duration-200 flex items-center justify-center">
+        <div className="flex flex-col items-center text-slate-400 dark:text-slate-500">
+          <FileText size={48} strokeWidth={1.5} className="mb-4 text-slate-300 dark:text-slate-600" />
+          <p className="text-sm">Select or create an item to get started</p>
         </div>
       </main>
     )
@@ -307,10 +315,10 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => editor.chain().focus().setHighlight({ color: c.color }).run()} 
                     className={`w-3.5 h-3.5 rounded-full ${c.bg} hover:scale-125 transition-transform ${editor.isActive('highlight', { color: c.color }) ? 'ring-2 ring-offset-1 ring-slate-400 dark:ring-slate-500 dark:ring-offset-[#222327]' : ''}`} 
-                  />
-                ))}
-              </div>
-            </div>
+              />
+            ))}
+          </div>
+        </div>
             
             {!isTodo && (
               <>

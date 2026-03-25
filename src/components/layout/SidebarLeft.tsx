@@ -3,6 +3,7 @@ import { Folder, FolderOpen, LogOut } from "lucide-react"
 import { NewFolderDialog } from "./NewFolderDialog"
 import { SettingsModal } from "./SettingsModal"
 import { FolderType } from "../../pages/Dashboard"
+import { Droppable, Draggable } from "@hello-pangea/dnd"
 
 interface SidebarLeftProps {
   folders: FolderType[];
@@ -39,40 +40,62 @@ export function SidebarLeft({ folders, activeFolderId, isSidebarOpen, onFolderCl
 
           <div className="w-8 h-[2px] bg-slate-200 dark:bg-[#1A1A1E] rounded-full my-1 transition-colors flex-shrink-0"></div>
 
-          {folders.map((folder) => {
-            const isActive = folder.id === activeFolderId;
-            const styles = folderStyles[folder.color] || folderStyles.indigo;
+          <Droppable droppableId="sidebar-folders" type="FOLDER">
+            {(provided) => (
+              <div 
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="flex flex-col gap-4 w-full items-center pb-4"
+              >
+                {folders.map((folder, index) => {
+                  const isActive = folder.id === activeFolderId;
+                  const styles = folderStyles[folder.color] || folderStyles.indigo;
 
-            return (
-              <div key={folder.id} className="relative w-full flex justify-center group flex-shrink-0">
-                <div 
-                  className={`absolute left-0 bg-slate-800 dark:bg-slate-200 rounded-r-full transition-all duration-300 w-1 ${
-                    isActive && isSidebarOpen
-                      ? "h-10 top-1" 
-                      : isActive 
-                        ? "h-5 top-3.5"
-                        : "h-0 top-6 group-hover:h-5 group-hover:top-3.5 opacity-0 group-hover:opacity-100"
-                  }`}
-                ></div>
-                
-                <button 
-                  onClick={() => onFolderClick(folder.id)}
-                  className={`w-12 h-12 flex items-center justify-center transition-all duration-300 ${
-                    isActive
-                      ? `rounded-xl shadow-md ${styles.active}`
-                      : `rounded-[24px] hover:rounded-xl ${styles.inactive}`
-                  }`}
-                  title={folder.name}
-                >
-                  {isActive && isSidebarOpen ? (
-                    <FolderOpen size={24} fill="none" strokeWidth={2} />
-                  ) : (
-                    <Folder size={24} fill="none" strokeWidth={2} />
-                  )}
-                </button>
+                  return (
+                    <Draggable key={folder.id} draggableId={`folder-${folder.id}`} index={index}>
+                      {(provided, snapshot) => (
+                        <div 
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`relative w-full flex justify-center group flex-shrink-0 ${
+                            snapshot.isDragging ? 'z-50 scale-110 drop-shadow-xl' : ''
+                          }`}
+                        >
+                          <div 
+                            className={`absolute left-0 bg-slate-800 dark:bg-slate-200 rounded-r-full transition-all duration-300 w-1 ${
+                              isActive && isSidebarOpen
+                                ? "h-10 top-1" 
+                                : isActive 
+                                  ? "h-5 top-3.5"
+                                  : "h-0 top-6 group-hover:h-5 group-hover:top-3.5 opacity-0 group-hover:opacity-100"
+                            }`}
+                          ></div>
+                          
+                          <button 
+                            onClick={() => onFolderClick(folder.id)}
+                            className={`w-12 h-12 flex items-center justify-center transition-all duration-300 ${
+                              isActive
+                                ? `rounded-xl shadow-md ${styles.active}`
+                                : `rounded-[24px] hover:rounded-xl ${styles.inactive}`
+                            }`}
+                            title={folder.name}
+                          >
+                            {isActive && isSidebarOpen ? (
+                              <FolderOpen size={24} fill="none" strokeWidth={2} />
+                            ) : (
+                              <Folder size={24} fill="none" strokeWidth={2} />
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </Draggable>
+                  )
+                })}
+                {provided.placeholder}
               </div>
-            )
-          })}
+            )}
+          </Droppable>
         </div>
 
         <div className="flex flex-col gap-5 items-center w-full mt-auto pt-4 flex-shrink-0">
@@ -88,7 +111,6 @@ export function SidebarLeft({ folders, activeFolderId, isSidebarOpen, onFolderCl
             <LogOut size={22} />
           </button>
 
-          {/* Version number added here */}
           <span className="text-[10px] font-medium text-slate-300 dark:text-slate-600 mt-2">
             v1.0.0
           </span>

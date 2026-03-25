@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react"
-import { ChevronDown, Trash2, FileText, CheckSquare, Timer, Lock, X, FolderPlus, Pencil } from "lucide-react"
+import { ChevronDown, Trash2, FileText, CheckSquare, Timer, Lock, X, FolderPlus, Pencil, Shield, GripVertical } from "lucide-react"
 import { FolderType } from "../../pages/Dashboard"
 import { CreateCategoryModal } from "./CreateCategoryModal"
 import { CreateItemModal } from "./CreateItemModal"
 import { RenameFolderModal } from "./RenameFolderModal"
+import { FolderPrivacyModal } from "./FolderPrivacyModal"
+import { Droppable, Draggable } from "@hello-pangea/dnd"
 
 interface SidebarInnerProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface SidebarInnerProps {
   activeItemId: string | null;
   onSelectItem: (id: string) => void;
   onRenameFolder: (folderId: string, newName: string) => void;
+  onUpdateFolderPrivacy: (folderId: string, isPrivate: boolean) => void;
   onDeleteFolder: (folderId: string) => void;
   onAddCategory: (folderId: string, name: string) => void;
   onDeleteCategory: (folderId: string, categoryId: string) => void;
@@ -24,6 +27,7 @@ export function SidebarInner({
   activeItemId, 
   onSelectItem,
   onRenameFolder,
+  onUpdateFolderPrivacy,
   onDeleteFolder,
   onAddCategory, 
   onDeleteCategory, 
@@ -37,6 +41,7 @@ export function SidebarInner({
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -117,6 +122,16 @@ export function SidebarInner({
                 <div className="h-px bg-slate-200 dark:bg-[#1A1A1E] my-1 mx-1"></div>
 
                 <button 
+                  onClick={() => { setIsMenuOpen(false); setPrivacyModalOpen(true); }}
+                  className="flex items-center justify-between px-2 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-brand-500 hover:text-slate-900 dark:hover:text-white rounded transition-colors group"
+                >
+                  Privacy Settings
+                  <Shield size={14} className="opacity-70 group-hover:opacity-100" />
+                </button>
+
+                <div className="h-px bg-slate-200 dark:bg-[#1A1A1E] my-1 mx-1"></div>
+
+                <button 
                   onClick={() => { setIsMenuOpen(false); setDeleteModalOpen(true); }}
                   className="flex items-center justify-between px-2 py-1.5 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white rounded transition-colors group"
                 >
@@ -128,80 +143,118 @@ export function SidebarInner({
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none pt-3 pb-4">
-            
-            {folder.categories.map(category => {
-              const isCollapsed = collapsedCategories.has(category.id);
-              
-              return (
-                <div key={category.id} className="mb-4">
+          <Droppable droppableId={`folder-${folder.id}`} type="CATEGORY">
+            {(provided) => (
+              <div 
+                ref={provided.innerRef} 
+                {...provided.droppableProps} 
+                className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none pt-3 pb-4"
+              >
+                {folder.categories.map((category, catIndex) => {
+                  const isCollapsed = collapsedCategories.has(category.id);
                   
-                  <div className="flex items-center justify-between px-2 group/cat">
-                    <div 
-                      onClick={() => toggleCategory(category.id)}
-                      className="flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer text-xs font-semibold tracking-wide uppercase transition-colors flex-1 py-1"
-                    >
-                      <ChevronDown size={12} className={`mr-1 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
-                      {category.name}
-                    </div>
-                    
-                    <div className="flex items-center opacity-0 group-hover/cat:opacity-100 transition-opacity">
-                      <CreateItemModal 
-                        categoryName={category.name} 
-                        onAddItem={(name, type, isPrivate) => onAddItem(folder.id, category.id, name, type, isPrivate)} 
-                      />
-                      <button 
-                        onClick={() => onDeleteCategory(folder.id, category.id)}
-                        className="text-slate-400 hover:text-rose-500 transition-colors p-1"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className={`mt-0.5 space-y-0.5 px-2 overflow-hidden transition-all duration-200 ${isCollapsed ? 'h-0 opacity-0' : 'h-auto opacity-100'}`}>
-                    {category.items.map(item => {
-                      const isActive = item.id === activeItemId;
-                      
-                      return (
+                  return (
+                    <Draggable key={category.id} draggableId={`category-${category.id}`} index={catIndex}>
+                      {(provided, snapshot) => (
                         <div 
-                          key={item.id}
-                          onClick={() => onSelectItem(item.id)}
-                          className={`flex items-center justify-between group/ch px-2 py-1.5 rounded cursor-pointer transition-colors ${
-                            isActive 
-                              ? 'bg-slate-200 dark:bg-[#222327] text-slate-900 dark:text-white' 
-                              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-[#222327] hover:text-slate-700 dark:hover:text-slate-300'
-                          }`}
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className={`mb-4 ${snapshot.isDragging ? 'opacity-90 bg-slate-100 dark:bg-[#222327] rounded-xl py-2' : ''}`}
                         >
-                          <div className="flex items-center gap-1.5 overflow-hidden">
-                            <span className="opacity-70 flex-shrink-0">
-                              {item.type === 'note' && <FileText size={16} />}
-                              {item.type === 'todo' && <CheckSquare size={16} />}
-                              {item.type === 'pomodoro' && <Timer size={16} />}
-                            </span>
+                          
+                          <div className="flex items-center justify-between px-2 group/cat">
+                            <div 
+                              onClick={() => toggleCategory(category.id)}
+                              className="flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer text-xs font-semibold tracking-wide uppercase transition-colors py-1 flex-1 truncate"
+                            >
+                              <ChevronDown size={12} className={`mr-1 flex-shrink-0 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+                              <span className="truncate">{category.name}</span>
+                            </div>
                             
-                            <span className={`text-[15px] truncate font-medium ${isActive ? '' : 'font-medium'}`}>
-                              {item.name}
-                            </span>
-                            
-                            {item.isPrivate && <Lock size={12} className="opacity-50 ml-1 flex-shrink-0" />}
+                            <div className="flex items-center opacity-0 group-hover/cat:opacity-100 transition-opacity">
+                              <div 
+                                {...provided.dragHandleProps}
+                                className="p-1 mr-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-grab active:cursor-grabbing"
+                              >
+                                <GripVertical size={13} />
+                              </div>
+                              <CreateItemModal 
+                                categoryName={category.name} 
+                                onAddItem={(name, type, isPrivate) => onAddItem(folder.id, category.id, name, type, isPrivate)} 
+                              />
+                              <button 
+                                onClick={() => onDeleteCategory(folder.id, category.id)}
+                                className="text-slate-400 hover:text-rose-500 transition-colors p-1"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
                           </div>
 
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); onDeleteItem(folder.id, category.id, item.id); }}
-                            className="opacity-0 group-hover/ch:opacity-100 text-slate-400 hover:text-rose-500 transition-colors ml-2"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
+                          <Droppable droppableId={`category-${category.id}`} type="ITEM">
+                            {(provided) => (
+                              <div 
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={`mt-0.5 space-y-0.5 px-2 overflow-hidden transition-all duration-200 ${isCollapsed && !snapshot.isDragging ? 'h-0 opacity-0' : 'min-h-[10px] opacity-100'}`}
+                              >
+                                {category.items.map((item, itemIndex) => {
+                                  const isActive = item.id === activeItemId;
+                                  
+                                  return (
+                                    <Draggable key={item.id} draggableId={`item-${item.id}`} index={itemIndex}>
+                                      {(provided, snapshot) => (
+                                        <div 
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                          onClick={() => onSelectItem(item.id)}
+                                          className={`flex items-center justify-between group/ch px-2 py-1.5 rounded cursor-pointer transition-colors ${
+                                            isActive 
+                                              ? 'bg-slate-200 dark:bg-[#2B2D31] text-slate-900 dark:text-white' 
+                                              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-[#2B2D31] hover:text-slate-700 dark:hover:text-slate-300'
+                                          } ${snapshot.isDragging ? 'shadow-lg bg-white dark:bg-[#222327] ring-1 ring-brand-500/50 z-50' : ''}`}
+                                        >
+                                          <div className="flex items-center gap-1.5 overflow-hidden">
+                                            <span className="opacity-70 flex-shrink-0">
+                                              {item.type === 'note' && <FileText size={16} />}
+                                              {item.type === 'todo' && <CheckSquare size={16} />}
+                                              {item.type === 'pomodoro' && <Timer size={16} />}
+                                            </span>
+                                            
+                                            <span className={`text-[15px] truncate ${isActive ? 'font-medium' : ''}`}>
+                                              {item.name}
+                                            </span>
+                                            
+                                            {item.isPrivate && <Lock size={12} className="opacity-50 ml-1 flex-shrink-0" />}
+                                          </div>
 
-          </div>
+                                          <button 
+                                            onClick={(e) => { e.stopPropagation(); onDeleteItem(folder.id, category.id, item.id); }}
+                                            className="opacity-0 group-hover/ch:opacity-100 text-slate-400 hover:text-rose-500 transition-colors ml-2"
+                                          >
+                                            <Trash2 size={14} />
+                                          </button>
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  )
+                                })}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+
+                        </div>
+                      )}
+                    </Draggable>
+                  )
+                })}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+
         </div>
       </aside>
 
@@ -216,6 +269,13 @@ export function SidebarInner({
         open={categoryModalOpen} 
         onOpenChange={setCategoryModalOpen} 
         onAddCategory={(name) => onAddCategory(folder.id, name)} 
+      />
+
+      <FolderPrivacyModal 
+        open={privacyModalOpen} 
+        onOpenChange={setPrivacyModalOpen} 
+        isPrivate={folder.isPrivate || false} 
+        onSave={(priv) => onUpdateFolderPrivacy(folder.id, priv)} 
       />
 
       {deleteModalOpen && (

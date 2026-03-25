@@ -6,6 +6,7 @@ import { SidebarLeft } from "../components/layout/SidebarLeft"
 import { SidebarInner } from "../components/layout/SidebarInner"
 import { MainContent } from "../components/layout/MainContent"
 import { Loader2 } from "lucide-react"
+import { DragDropContext, DropResult } from "@hello-pangea/dnd"
 
 export type ItemType = {
   id: string;
@@ -43,9 +44,9 @@ export default function Dashboard() {
 
   const fetchWorkspace = useCallback(async (userId: string) => {
     let [foldersRes, categoriesRes, itemsRes] = await Promise.all([
-      supabase.from('folders').select('*').eq('user_id', userId).neq('is_deleted', true).order('created_at', { ascending: true }),
-      supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-      supabase.from('items').select('*').eq('user_id', userId).neq('is_deleted', true).order('created_at', { ascending: true })
+      supabase.from('folders').select('*').eq('user_id', userId).neq('is_deleted', true).order('position', { ascending: true }).order('created_at', { ascending: true }),
+      supabase.from('categories').select('*').eq('user_id', userId).neq('is_deleted', true).order('position', { ascending: true }).order('created_at', { ascending: true }),
+      supabase.from('items').select('*').eq('user_id', userId).neq('is_deleted', true).order('position', { ascending: true }).order('created_at', { ascending: true })
     ])
 
     if (foldersRes.error || categoriesRes.error || itemsRes.error) {
@@ -62,24 +63,7 @@ export default function Dashboard() {
         .insert({ user_id: userId, folder_id: fData.id, name: 'Getting Started' })
         .select().single()
 
-      const guideHTML = `
-        <h2>welcome to compo! 🎉</h2>
-        <p>i built compo to be a quiet place for your work. it keeps your notes, tasks, and time tracking all in one spot. here is how everything works.</p>
-        <p></p>
-        <h3>📁 folders & categories</h3>
-        <p>your workspace uses folders and categories to keep things neat. folders are the colorful icons on the far left. click the <strong>+</strong> button there to make a new one. inside a folder, you have categories. these act like dividers. use them to separate your personal stuff from your work projects.</p>
-        <p></p>
-        <h3>📝 notes, tasks, and timers</h3>
-        <p>hover your mouse over any category name in the sidebar. a hidden <strong>+</strong> button will show up. click it to add an item to that category. you can add a blank note, an interactive to-do list, or a pomodoro focus timer. everything you type saves automatically to your database.</p>
-        <p></p>
-        <h3>⚙️ settings & themes</h3>
-        <p>click the gear icon in the bottom left corner to open settings. from there, you can turn on dark mode, swap your accent color, and manage your account.</p>
-        <p></p>
-        <h3>🗑️ cleaning up</h3>
-        <p>this guide is a real note living in your database. i put it here so you could test things out. you can edit this text, click over to check off the dummy tasks, or run the timer. when you are ready for a clean slate, just hover over the "Getting Started" category in the sidebar and click the trash can to delete this entire folder.</p>
-        <p></p>
-        <p>#compo #focus #workspace</p>
-      `
+      const guideHTML = `<h2>welcome to compo! 🎉</h2>` 
 
       await supabase.from('items').insert([
         { user_id: userId, category_id: cData.id, name: 'how to use compo', type: 'note', title: 'Welcome to compo', content: guideHTML },
@@ -88,9 +72,9 @@ export default function Dashboard() {
       ])
 
       const newFetch = await Promise.all([
-        supabase.from('folders').select('*').eq('user_id', userId).neq('is_deleted', true).order('created_at', { ascending: true }),
-        supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-        supabase.from('items').select('*').eq('user_id', userId).neq('is_deleted', true).order('created_at', { ascending: true })
+        supabase.from('folders').select('*').eq('user_id', userId).neq('is_deleted', true).order('position', { ascending: true }).order('created_at', { ascending: true }),
+        supabase.from('categories').select('*').eq('user_id', userId).neq('is_deleted', true).order('position', { ascending: true }).order('created_at', { ascending: true }),
+        supabase.from('items').select('*').eq('user_id', userId).neq('is_deleted', true).order('position', { ascending: true }).order('created_at', { ascending: true })
       ])
       
       foldersRes = newFetch[0]
@@ -152,6 +136,86 @@ export default function Dashboard() {
     checkUserAndFetchData()
   }, [navigate, fetchWorkspace])
 
+  const handleDragEnd = async (result: DropResult) => {
+    const { destination, source, type } = result;
+
+    if (!destination) return;
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+    if (type === 'FOLDER') {
+      const newFolders = Array.from(folders);
+      const [movedFolder] = newFolders.splice(source.index, 1);
+      newFolders.splice(destination.index, 0, movedFolder);
+
+      const updatedFolders = newFolders.map((f, index) => ({ ...f, position: index }));
+      setFolders(updatedFolders);
+
+      updatedFolders.forEach((f) => {
+        supabase.from('folders').update({ position: f.position }).eq('id', f.id).then();
+      });
+    }
+
+    if (type === 'CATEGORY') {
+      const newFolders = [...folders];
+      const folderIndex = newFolders.findIndex(f => `folder-${f.id}` === destination.droppableId);
+      if (folderIndex === -1) return;
+
+      const newCategories = Array.from(newFolders[folderIndex].categories);
+      const [movedCat] = newCategories.splice(source.index, 1);
+      newCategories.splice(destination.index, 0, movedCat);
+
+      newFolders[folderIndex].categories = newCategories;
+      setFolders(newFolders);
+
+      newCategories.forEach((cat, index) => {
+        supabase.from('categories').update({ position: index }).eq('id', cat.id).then();
+      });
+    }
+
+    if (type === 'ITEM') {
+      const sourceCatId = source.droppableId.replace('category-', '');
+      const destCatId = destination.droppableId.replace('category-', '');
+
+      const newFolders = [...folders];
+      const folderIndex = newFolders.findIndex(f => f.id === activeFolderId);
+      if (folderIndex === -1) return;
+
+      const sourceCatIndex = newFolders[folderIndex].categories.findIndex(c => c.id === sourceCatId);
+      const destCatIndex = newFolders[folderIndex].categories.findIndex(c => c.id === destCatId);
+
+      if (sourceCatIndex === -1 || destCatIndex === -1) return;
+
+      const sourceItems = Array.from(newFolders[folderIndex].categories[sourceCatIndex].items);
+      const destItems = sourceCatId === destCatId ? sourceItems : Array.from(newFolders[folderIndex].categories[destCatIndex].items);
+
+      const [movedItem] = sourceItems.splice(source.index, 1);
+
+      if (sourceCatId === destCatId) {
+        sourceItems.splice(destination.index, 0, movedItem);
+        newFolders[folderIndex].categories[sourceCatIndex].items = sourceItems;
+        setFolders(newFolders);
+
+        sourceItems.forEach((item, index) => {
+          supabase.from('items').update({ position: index }).eq('id', item.id).then();
+        });
+      } else {
+        destItems.splice(destination.index, 0, movedItem);
+        newFolders[folderIndex].categories[sourceCatIndex].items = sourceItems;
+        newFolders[folderIndex].categories[destCatIndex].items = destItems;
+        setFolders(newFolders);
+
+        supabase.from('items').update({ category_id: destCatId, position: destination.index }).eq('id', movedItem.id).then();
+
+        sourceItems.forEach((item, index) => {
+          supabase.from('items').update({ position: index }).eq('id', item.id).then();
+        });
+        destItems.forEach((item, index) => {
+          supabase.from('items').update({ position: index }).eq('id', item.id).then();
+        });
+      }
+    }
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     navigate('/login')
@@ -197,6 +261,11 @@ export default function Dashboard() {
     await supabase.from('folders').update({ name: newName }).eq('id', folderId)
   }
 
+  const handleUpdateFolderPrivacy = async (folderId: string, isPrivate: boolean) => {
+    setFolders(folders.map(f => f.id === folderId ? { ...f, isPrivate } : f))
+    await supabase.from('folders').update({ is_private: isPrivate }).eq('id', folderId)
+  }
+
   const handleDeleteFolder = async (folderId: string) => {
     setFolders(folders.filter(f => f.id !== folderId))
     if (activeFolderId === folderId) {
@@ -230,7 +299,8 @@ export default function Dashboard() {
       }
       return folder
     }))
-    await supabase.from('categories').delete().eq('id', categoryId)
+    // Soft delete na ito para pumasok sa trash tab
+    await supabase.from('categories').update({ is_deleted: true }).eq('id', categoryId)
   }
 
   const handleAddItem = async (folderId: string, categoryId: string, name: string, type: 'note' | 'todo' | 'pomodoro', isPrivate: boolean) => {
@@ -325,33 +395,37 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-white dark:bg-[#222327] font-sans overflow-hidden">
-      <SidebarLeft 
-        folders={folders}
-        activeFolderId={activeFolderId}
-        isSidebarOpen={isSidebarOpen}
-        onFolderClick={handleFolderClick} 
-        onAddFolder={handleAddFolder}
-        onLogout={handleLogout}
-      />
-      
-      <SidebarInner 
-        isOpen={isSidebarOpen && activeFolderId !== null} 
-        folder={activeFolder}
-        activeItemId={activeItemId}
-        onSelectItem={setActiveItemId}
-        onRenameFolder={handleRenameFolder}
-        onDeleteFolder={handleDeleteFolder}
-        onAddCategory={handleAddCategory}
-        onDeleteCategory={handleDeleteCategory}
-        onAddItem={handleAddItem}
-        onDeleteItem={handleDeleteItem}
-      />
-      
-      <MainContent 
-        activeItem={activeItem} 
-        onUpdateItem={handleUpdateItemContent} 
-      />
-    </div>
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="flex h-screen w-full bg-white dark:bg-[#222327] font-sans overflow-hidden">
+        <SidebarLeft 
+          folders={folders}
+          activeFolderId={activeFolderId}
+          isSidebarOpen={isSidebarOpen}
+          onFolderClick={handleFolderClick} 
+          onAddFolder={handleAddFolder}
+          onLogout={handleLogout}
+        />
+        
+        <SidebarInner 
+          isOpen={isSidebarOpen && activeFolderId !== null} 
+          folder={activeFolder}
+          activeItemId={activeItemId}
+          onSelectItem={setActiveItemId}
+          onRenameFolder={handleRenameFolder}
+          onUpdateFolderPrivacy={handleUpdateFolderPrivacy}
+          onDeleteFolder={handleDeleteFolder}
+          onAddCategory={handleAddCategory}
+          onDeleteCategory={handleDeleteCategory}
+          onAddItem={handleAddItem}
+          onDeleteItem={handleDeleteItem}
+        />
+        
+        <MainContent 
+          activeItem={activeItem} 
+          activeFolder={activeFolder}
+          onUpdateItem={handleUpdateItemContent} 
+        />
+      </div>
+    </DragDropContext>
   )
 }

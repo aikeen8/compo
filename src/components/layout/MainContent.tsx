@@ -5,10 +5,11 @@ import Highlight from '@tiptap/extension-highlight'
 import TextAlign from '@tiptap/extension-text-align'
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
-import { Bold, Italic, Strikethrough, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, ListTodo, FileText } from "lucide-react"
+import { Bold, Italic, Strikethrough, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, ListTodo, FileText, Lock, ShieldAlert, Loader2, Eye, EyeOff } from "lucide-react"
 import { ItemType } from "../../pages/Dashboard"
 import { useTheme } from "../ThemeProvider"
 import { PomodoroView } from "../pomodoro/PomodoroView"
+import { supabase } from "../../lib/supabase"
 
 interface MainContentProps {
   activeItem?: ItemType | null;
@@ -42,6 +43,33 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
   const [localTitle, setLocalTitle] = useState("")
   const [prevItemId, setPrevItemId] = useState(activeItem?.id)
 
+  // lock screen states
+  const [isUnlocked, setIsUnlocked] = useState(false)
+  const [savedPin, setSavedPin] = useState<string | null>(null)
+  const [isFetchingPin, setIsFetchingPin] = useState(false)
+  const [pinInput, setPinInput] = useState("")
+  const [showPin, setShowPin] = useState(false)
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsUnlocked(false)
+    setPinInput("")
+    setShowPin(false)
+    
+    if (activeItem?.isPrivate) {
+      setIsFetchingPin(true)
+      const fetchPin = async () => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data } = await supabase.from('user_settings').select('pin').eq('user_id', user.id).single()
+          setSavedPin(data?.pin || null)
+        }
+        setIsFetchingPin(false)
+      }
+      fetchPin()
+    }
+  }, [activeItem?.id, activeItem?.isPrivate])
+
   if (activeItem?.id !== prevItemId) {
     setPrevItemId(activeItem?.id);
     setLocalTitle(activeItem?.title || "");
@@ -69,9 +97,8 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
   })
 
   useEffect(() => {
-    if (activeItem && editor) {
+    if (activeItem && editor && isUnlocked !== false) {
       if (editor.getHTML() !== activeItem.content) {
-        // Automatically start with a checkbox if it's a brand new empty to-do list
         if (activeItem.type === 'todo' && !activeItem.content) {
           editor.commands.setContent('<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p></p></li></ul>');
         } else {
@@ -79,7 +106,7 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
         }
       }
     }
-  }, [activeItem, editor])
+  }, [activeItem, editor, isUnlocked])
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
@@ -103,6 +130,64 @@ export function MainContent({ activeItem, onUpdateItem }: MainContentProps) {
         <div className="flex flex-col items-center text-slate-400 dark:text-slate-500">
           <FileText size={48} strokeWidth={1.5} className="mb-4 text-slate-300 dark:text-slate-600" />
           <p className="text-sm">Select or create an item to get started</p>
+        </div>
+      </main>
+    )
+  }
+
+  // --- lock screen intercept ---
+  if (activeItem.isPrivate && !isUnlocked) {
+    if (isFetchingPin) {
+      return (
+        <main className="flex-1 h-screen bg-white dark:bg-[#222327] flex items-center justify-center">
+          <Loader2 className="animate-spin text-slate-400 w-8 h-8" />
+        </main>
+      )
+    }
+
+    if (!savedPin) {
+      return (
+        <main className="flex-1 h-screen bg-white dark:bg-[#222327] flex flex-col items-center justify-center p-6 text-center">
+          <ShieldAlert size={48} strokeWidth={1.5} className="text-amber-500 mb-4" />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">PIN Required</h2>
+          <p className="text-slate-500 dark:text-slate-400 max-w-sm text-sm leading-relaxed">
+            you made this item private, but you haven't set up a security PIN yet. please go to settings {'>'} data & privacy to set your 4-digit PIN.
+          </p>
+        </main>
+      )
+    }
+
+    return (
+      <main className="flex-1 h-screen bg-white dark:bg-[#222327] flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center bg-slate-50 dark:bg-[#1A1A1E] px-12 py-10 rounded-[2rem] border border-slate-200 dark:border-[#222327] shadow-sm">
+          <Lock size={40} strokeWidth={1.5} className="text-brand-500 mb-4" />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Enter PIN</h2>
+          <div className="relative">
+            <input
+              type={showPin ? "text" : "password"}
+              maxLength={4}
+              autoFocus
+              value={pinInput}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '')
+                setPinInput(val)
+                if (val.length === 4) {
+                  if (val === savedPin) {
+                    setIsUnlocked(true)
+                  } else {
+                    setTimeout(() => setPinInput(""), 300)
+                  }
+                }
+              }}
+              className="text-center text-3xl font-bold tracking-[0.3em] w-48 py-4 pl-8 pr-12 bg-white dark:bg-[#222327] border border-slate-200 dark:border-[#222327] rounded-2xl focus:outline-none focus:border-brand-500 text-slate-900 dark:text-white shadow-inner [&::-ms-reveal]:hidden [&::-webkit-reveal]:hidden"
+            />
+            <button
+              onClick={() => setShowPin(!showPin)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
+            >
+              {showPin ? <EyeOff size={22} /> : <Eye size={22} />}
+            </button>
+          </div>
         </div>
       </main>
     )

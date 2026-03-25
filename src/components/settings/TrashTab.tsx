@@ -13,7 +13,6 @@ export function TrashTab() {
   const [isLoading, setIsLoading] = useState(true)
 
   const fetchTrash = useCallback(async () => {
-    // removed setIsLoading(true) here to fix the linter error
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -28,7 +27,7 @@ export function TrashTab() {
   }, [])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchTrash()
   }, [fetchTrash])
 
@@ -59,15 +58,15 @@ export function TrashTab() {
   const isEmpty = deletedFolders.length === 0 && deletedItems.length === 0
 
   return (
-    <div className="max-w-2xl">
-      <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Trash Bin</h2>
-      <p className="text-slate-500 dark:text-slate-400 mb-8">
-        items here will be permanently deleted after 30 days. you can restore them or delete them immediately.
+    <div className="max-w-xl pr-2">
+      <h3 className="text-xl font-semibold mb-6 dark:text-white">Trash Bin</h3>
+      <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm">
+        Items here will be permanently deleted after 30 days. You can restore them or delete them immediately.
       </p>
 
       {isEmpty ? (
         <div className="text-center py-10 bg-slate-50 dark:bg-[#1A1A1E] rounded-2xl border border-dashed border-slate-200 dark:border-[#222327]">
-          <p className="text-slate-400 dark:text-slate-500">your trash is empty.</p>
+          <p className="text-slate-400 dark:text-slate-500 text-sm">Your trash is empty.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -76,13 +75,13 @@ export function TrashTab() {
             <div key={folder.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#1A1A1E] rounded-xl border border-slate-100 dark:border-[#222327]">
               <div className="flex items-center gap-3">
                 <Folder className="text-slate-400" size={20} />
-                <span className="font-medium text-slate-700 dark:text-slate-200">{folder.name}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-200 text-sm">{folder.name}</span>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleRestoreFolder(folder.id)} className="p-2 text-slate-400 hover:text-brand-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors" title="Restore">
+                <button onClick={() => handleRestoreFolder(folder.id)} className="p-2 text-slate-400 hover:text-brand-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors border border-slate-100 dark:border-[#121214]" title="Restore">
                   <RotateCcw size={16} />
                 </button>
-                <button onClick={() => handlePermanentDeleteFolder(folder.id)} className="p-2 text-slate-400 hover:text-rose-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors" title="Permanently Delete">
+                <button onClick={() => handlePermanentDeleteFolder(folder.id)} className="p-2 text-slate-400 hover:text-rose-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors border border-slate-100 dark:border-[#121214]" title="Permanently Delete">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -93,13 +92,13 @@ export function TrashTab() {
             <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#1A1A1E] rounded-xl border border-slate-100 dark:border-[#222327]">
               <div className="flex items-center gap-3">
                 <FileText className="text-slate-400" size={20} />
-                <span className="font-medium text-slate-700 dark:text-slate-200">{item.name}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-200 text-sm">{item.name}</span>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleRestoreItem(item.id)} className="p-2 text-slate-400 hover:text-brand-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors" title="Restore">
+                <button onClick={() => handleRestoreItem(item.id)} className="p-2 text-slate-400 hover:text-brand-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors border border-slate-100 dark:border-[#121214]" title="Restore">
                   <RotateCcw size={16} />
                 </button>
-                <button onClick={() => handlePermanentDeleteItem(item.id)} className="p-2 text-slate-400 hover:text-rose-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors" title="Permanently Delete">
+                <button onClick={() => handlePermanentDeleteItem(item.id)} className="p-2 text-slate-400 hover:text-rose-500 bg-white dark:bg-[#222327] rounded-lg shadow-sm transition-colors border border-slate-100 dark:border-[#121214]" title="Permanently Delete">
                   <Trash2 size={16} />
                 </button>
               </div>

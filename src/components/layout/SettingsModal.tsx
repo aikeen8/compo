@@ -4,6 +4,7 @@ import { Settings, User, Palette, HardDrive, Trash2 } from "lucide-react"
 import { AppearanceTab } from "../settings/AppearanceTab"
 import { AccountTab } from "../settings/AccountTab"
 import { TrashTab } from "../settings/TrashTab"
+import { DataPrivacyTab } from "../settings/DataPrivacyTab"
 
 const tabs = [
   { id: "account", label: "My Account", icon: User },
@@ -50,7 +51,7 @@ export function SettingsModal() {
           {activeTab === "account" && <AccountTab />}
           {activeTab === "appearance" && <AppearanceTab />}
           {activeTab === "trash" && <TrashTab />}
-          {activeTab === "data" && <p className="text-slate-500">data settings coming soon</p>}
+          {activeTab === "data" && <DataPrivacyTab />}
         </div>
       </DialogContent>
     </Dialog>

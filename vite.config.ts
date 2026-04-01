@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.png'],
+      includeAssets: ['icon.png'], 
       manifest: {
         name: 'compo',
         short_name: 'compo',
@@ -18,12 +18,12 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/logo.png',
+            src: '/icon.png', 
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/logo.png',
+            src: '/icon.png', 
             sizes: '512x512',
             type: 'image/png'
           }

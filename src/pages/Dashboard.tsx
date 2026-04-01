@@ -39,6 +39,7 @@ export default function Dashboard() {
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null)
   const [activeItemId, setActiveItemId] = useState<string | null>(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
 
@@ -299,7 +300,6 @@ export default function Dashboard() {
       }
       return folder
     }))
-    // Soft delete na ito para pumasok sa trash tab
     await supabase.from('categories').update({ is_deleted: true }).eq('id', categoryId)
   }
 
@@ -396,34 +396,47 @@ export default function Dashboard() {
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex h-screen w-full bg-white dark:bg-[#222327] font-sans overflow-hidden">
-        <SidebarLeft 
-          folders={folders}
-          activeFolderId={activeFolderId}
-          isSidebarOpen={isSidebarOpen}
-          onFolderClick={handleFolderClick} 
-          onAddFolder={handleAddFolder}
-          onLogout={handleLogout}
-        />
+      <div className="flex h-screen w-full bg-white dark:bg-[#222327] font-sans overflow-hidden relative">
         
-        <SidebarInner 
-          isOpen={isSidebarOpen && activeFolderId !== null} 
-          folder={activeFolder}
-          activeItemId={activeItemId}
-          onSelectItem={setActiveItemId}
-          onRenameFolder={handleRenameFolder}
-          onUpdateFolderPrivacy={handleUpdateFolderPrivacy}
-          onDeleteFolder={handleDeleteFolder}
-          onAddCategory={handleAddCategory}
-          onDeleteCategory={handleDeleteCategory}
-          onAddItem={handleAddItem}
-          onDeleteItem={handleDeleteItem}
-        />
+        {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+
+        <div className={`fixed inset-y-0 left-0 z-50 flex h-full transform transition-transform duration-300 md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <SidebarLeft 
+            folders={folders}
+            activeFolderId={activeFolderId}
+            isSidebarOpen={isSidebarOpen}
+            onFolderClick={handleFolderClick} 
+            onAddFolder={handleAddFolder}
+            onLogout={handleLogout}
+          />
+          <SidebarInner 
+            isOpen={isSidebarOpen && activeFolderId !== null} 
+            folder={activeFolder}
+            activeItemId={activeItemId}
+            onSelectItem={(id) => {
+              setActiveItemId(id)
+              setIsMobileMenuOpen(false) // automatically close menu on mobile when a note is clicked
+            }}
+            onRenameFolder={handleRenameFolder}
+            onUpdateFolderPrivacy={handleUpdateFolderPrivacy}
+            onDeleteFolder={handleDeleteFolder}
+            onAddCategory={handleAddCategory}
+            onDeleteCategory={handleDeleteCategory}
+            onAddItem={handleAddItem}
+            onDeleteItem={handleDeleteItem}
+          />
+        </div>
         
         <MainContent 
           activeItem={activeItem} 
           activeFolder={activeFolder}
           onUpdateItem={handleUpdateItemContent} 
+          onToggleMobileMenu={() => setIsMobileMenuOpen(true)}
         />
       </div>
     </DragDropContext>

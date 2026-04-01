@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Highlight from '@tiptap/extension-highlight'
 import TextAlign from '@tiptap/extension-text-align'
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
-import { Bold, Italic, Strikethrough, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, ListTodo, FileText, Lock, ShieldAlert, Loader2, Eye, EyeOff } from "lucide-react"
+import Image from '@tiptap/extension-image'
+import { Bold, Italic, Strikethrough, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, ListTodo, FileText, Lock, ShieldAlert, Loader2, Eye, EyeOff, Image as ImageIcon, Menu } from "lucide-react"
 import { ItemType, FolderType } from "../../pages/Dashboard"
 import { useTheme } from "../ThemeProvider"
 import { PomodoroView } from "../pomodoro/PomodoroView"
@@ -15,6 +16,7 @@ interface MainContentProps {
   activeItem?: ItemType | null;
   activeFolder?: FolderType | null;
   onUpdateItem?: (id: string, title: string, content: string) => void;
+  onToggleMobileMenu?: () => void;
 }
 
 const highlightColors = [
@@ -37,18 +39,21 @@ const accentHexMap: Record<string, string> = {
   slate: '#64748b'
 }
 
-export function MainContent({ activeItem, activeFolder, onUpdateItem }: MainContentProps) {
+export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMobileMenu }: MainContentProps) {
   const { accent, customColor } = useTheme()
   const activeColor = accent === 'custom' ? customColor : (accentHexMap[accent] || '#6366f1')
 
   const [localTitle, setLocalTitle] = useState("")
   const [prevItemId, setPrevItemId] = useState(activeItem?.id)
+  const [isUploading, setIsUploading] = useState(false)
 
   const [unlockedId, setUnlockedId] = useState<string | null>(null)
   const [savedPin, setSavedPin] = useState<string | null>(null)
   const [isFetchingPin, setIsFetchingPin] = useState(false)
   const [pinInput, setPinInput] = useState("")
   const [showPin, setShowPin] = useState(false)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const needsPin = activeItem?.isPrivate || activeFolder?.isPrivate;
   
@@ -57,9 +62,7 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem }: MainCont
     (!activeItem?.isPrivate || unlockedId === activeItem?.id || unlockedId === activeFolder?.id);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPinInput("")
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowPin(false)
     
     if (needsPin) {
@@ -88,6 +91,11 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem }: MainCont
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       TaskList,
       TaskItem.configure({ nested: true }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'rounded-xl max-w-full h-auto border border-slate-200 dark:border-[#222327] my-4',
+        },
+      }),
     ],
     content: "",
     onUpdate: ({ editor }) => {
@@ -122,6 +130,27 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem }: MainCont
     }
   }
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !editor) return
+
+    setIsUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`
+      const { error: uploadError } = await supabase.storage.from('images').upload(fileName, file)
+      if (uploadError) throw uploadError
+      const { data } = supabase.storage.from('images').getPublicUrl(fileName)
+      editor.chain().focus().setImage({ src: data.publicUrl }).run()
+    } catch (error) {
+      console.error('error uploading image:', error)
+      alert('failed to upload image.')
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   const formatDateTime = (timestamp: number) => {
     if (!timestamp) return '';
     return new Intl.DateTimeFormat('en-US', {
@@ -141,7 +170,10 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem }: MainCont
 
     if (!savedPin) {
       return (
-        <main className="flex-1 h-screen bg-white dark:bg-[#222327] flex flex-col items-center justify-center p-6 text-center">
+        <main className="flex-1 h-screen bg-white dark:bg-[#222327] flex flex-col items-center justify-center p-6 text-center relative">
+          <button onClick={onToggleMobileMenu} className="absolute top-4 left-4 p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] md:hidden z-10">
+            <Menu size={24} />
+          </button>
           <ShieldAlert size={48} strokeWidth={1.5} className="text-amber-500 mb-4" />
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">PIN Required</h2>
           <p className="text-slate-500 dark:text-slate-400 max-w-sm text-sm leading-relaxed">
@@ -152,7 +184,10 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem }: MainCont
     }
 
     return (
-      <main className="flex-1 h-screen bg-white dark:bg-[#222327] flex flex-col items-center justify-center">
+      <main className="flex-1 h-screen bg-white dark:bg-[#222327] flex flex-col items-center justify-center relative">
+        <button onClick={onToggleMobileMenu} className="absolute top-4 left-4 p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] md:hidden z-10">
+          <Menu size={24} />
+        </button>
         <div className="flex flex-col items-center bg-slate-50 dark:bg-[#1A1A1E] px-12 py-10 rounded-[2rem] border border-slate-200 dark:border-[#222327] shadow-sm">
           <Lock size={40} strokeWidth={1.5} className="text-brand-500 mb-4" />
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Enter PIN</h2>
@@ -192,8 +227,11 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem }: MainCont
 
   if (!activeItem) {
     return (
-      <main className="flex-1 h-screen bg-white dark:bg-[#222327] transition-colors duration-200 flex items-center justify-center">
-        <div className="flex flex-col items-center text-slate-400 dark:text-slate-500">
+      <main className="flex-1 h-screen bg-white dark:bg-[#222327] transition-colors duration-200 flex flex-col relative">
+        <button onClick={onToggleMobileMenu} className="absolute top-4 left-4 p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] md:hidden z-10">
+          <Menu size={24} />
+        </button>
+        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
           <FileText size={48} strokeWidth={1.5} className="mb-4 text-slate-300 dark:text-slate-600" />
           <p className="text-sm">Select or create an item to get started</p>
         </div>
@@ -202,7 +240,14 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem }: MainCont
   }
 
   if (activeItem.type === 'pomodoro') {
-    return <PomodoroView />
+    return (
+      <div className="flex-1 h-screen flex flex-col relative overflow-hidden bg-white dark:bg-[#222327]">
+        <button onClick={onToggleMobileMenu} className="absolute top-4 left-4 p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] md:hidden z-10">
+          <Menu size={24} />
+        </button>
+        <PomodoroView />
+      </div>
+    )
   }
 
   const isTodo = activeItem.type === 'todo';
@@ -299,57 +344,78 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem }: MainCont
         }
       `}</style>
       
-      <div className="h-14 border-b border-slate-200 dark:border-[#121214] flex items-center px-6 gap-1 flex-shrink-0 bg-white/50 dark:bg-[#222327]/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="h-14 border-b border-slate-200 dark:border-[#121214] flex items-center px-4 sm:px-6 gap-1 flex-shrink-0 bg-white/50 dark:bg-[#222327]/50 backdrop-blur-sm sticky top-0 z-10 overflow-x-auto scrollbar-none">
+        <button onClick={onToggleMobileMenu} className="p-2 mr-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300 md:hidden flex-shrink-0">
+          <Menu size={20} />
+        </button>
         {editor && (
           <>
-            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleBold().run()} className={`p-2 rounded-lg transition-colors ${editor.isActive('bold') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <Bold size={16} /> </button>
-            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-2 rounded-lg transition-colors ${editor.isActive('italic') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <Italic size={16} /> </button>
-            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleStrike().run()} className={`p-2 rounded-lg transition-colors ${editor.isActive('strike') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <Strikethrough size={16} /> </button>
+            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleBold().run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive('bold') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <Bold size={16} /> </button>
+            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive('italic') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <Italic size={16} /> </button>
+            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleStrike().run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive('strike') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <Strikethrough size={16} /> </button>
             
-            <div className="flex items-center gap-1.5 ml-1 mr-1">
+            <div className="flex items-center gap-1.5 px-1 ml-1 flex-shrink-0">
               <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleHighlight().run()} className={`p-2 rounded-lg transition-colors ${editor.isActive('highlight') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <Highlighter size={16} /> </button>
-              <div className="flex items-center gap-1.5 px-1">
+              <div className="hidden sm:flex items-center gap-1.5 px-1">
                 {highlightColors.map(c => (
                   <button 
                     key={c.color} 
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => editor.chain().focus().setHighlight({ color: c.color }).run()} 
                     className={`w-3.5 h-3.5 rounded-full ${c.bg} hover:scale-125 transition-transform ${editor.isActive('highlight', { color: c.color }) ? 'ring-2 ring-offset-1 ring-slate-400 dark:ring-slate-500 dark:ring-offset-[#222327]' : ''}`} 
-              />
-            ))}
-          </div>
-        </div>
+                  />
+                ))}
+              </div>
+            </div>
             
             {!isTodo && (
               <>
-                <div className="w-px h-6 bg-slate-200 dark:bg-[#121214] mx-2"></div>
+                <div className="w-px h-6 bg-slate-200 dark:bg-[#121214] mx-2 flex-shrink-0"></div>
                 
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('left').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'left' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignLeft size={16} /> </button>
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('center').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'center' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignCenter size={16} /> </button>
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('right').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'right' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignRight size={16} /> </button>
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('justify').run()} className={`p-2 rounded-lg transition-colors ${editor.isActive({ textAlign: 'justify' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignJustify size={16} /> </button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('left').run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive({ textAlign: 'left' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignLeft size={16} /> </button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('center').run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive({ textAlign: 'center' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignCenter size={16} /> </button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('right').run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive({ textAlign: 'right' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignRight size={16} /> </button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().setTextAlign('justify').run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive({ textAlign: 'justify' }) ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <AlignJustify size={16} /> </button>
+                
+                <div className="w-px h-6 bg-slate-200 dark:bg-[#121214] mx-2 flex-shrink-0"></div>
+                
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  ref={fileInputRef} 
+                  onChange={handleImageUpload} 
+                />
+                <button 
+                  onClick={() => fileInputRef.current?.click()} 
+                  disabled={isUploading}
+                  className="p-2 rounded-lg transition-colors flex-shrink-0 text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300 disabled:opacity-50"
+                  title="Upload Image"
+                >
+                  {isUploading ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+                </button>
               </>
             )}
             
-            <div className="w-px h-6 bg-slate-200 dark:bg-[#121214] mx-2"></div>
+            <div className="w-px h-6 bg-slate-200 dark:bg-[#121214] mx-2 flex-shrink-0"></div>
 
-            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleTaskList().run()} className={`p-2 rounded-lg transition-colors ${editor.isActive('taskList') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <ListTodo size={16} /> </button>
+            <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleTaskList().run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive('taskList') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <ListTodo size={16} /> </button>
           </>
         )}
       </div>
 
-      <div className="max-w-4xl w-full mx-auto px-12 pt-12 pb-20 md:px-20 flex flex-col flex-1">
+      <div className="max-w-4xl w-full mx-auto px-6 pt-8 pb-20 md:px-20 md:pt-12 flex flex-col flex-1">
         <input
           type="text"
           placeholder={isTodo ? "To-do List Title" : "Note Title"}
           value={localTitle}
           onChange={handleTitleChange}
-          className="text-4xl font-bold bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder-slate-300 dark:placeholder-slate-600 mb-2 w-full transition-colors pb-3"
+          className="text-3xl md:text-4xl font-bold bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder-slate-300 dark:placeholder-slate-600 mb-2 w-full transition-colors pb-3"
         />
         
         <div className="flex items-center justify-between text-[11px] font-medium tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-8 px-1">
           <span>Created {formatDateTime(activeItem.createdAt)}</span>
-          <span>Last edited {formatDateTime(activeItem.updatedAt)}</span>
+          <span className="hidden sm:inline">Last edited {formatDateTime(activeItem.updatedAt)}</span>
         </div>
         
         <EditorContent editor={editor} className="flex-1 w-full" />

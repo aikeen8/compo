@@ -28,16 +28,15 @@ export function CreateCategoryModal({ onAddCategory, children, open, onOpenChang
   return (
     <Dialog open={isOpen} onOpenChange={(val) => {
       setIsOpen(val);
-      if (!val) setName(""); // clear input when closing
+      if (!val) setName("");
     }}>
-      {/* removed the fallback plus button here */}
       {children && (
         <DialogTrigger asChild>
           {children}
         </DialogTrigger>
       )}
       
-      <DialogContent className="sm:max-w-md dark:bg-[#222327] dark:text-slate-100 border-0 dark:border-[#121214] rounded-2xl shadow-xl transition-colors">
+      <DialogContent className="w-[92vw] sm:max-w-md dark:bg-[#222327] dark:text-slate-100 border-0 dark:border-[#121214] rounded-[24px] shadow-xl transition-colors">
         <DialogHeader>
           <DialogTitle className="text-slate-800 dark:text-slate-100">Create Category</DialogTitle>
         </DialogHeader>

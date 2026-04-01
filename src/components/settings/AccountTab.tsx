@@ -64,14 +64,14 @@ export function AccountTab() {
               placeholder="Enter new password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="px-4 py-2.5 bg-white dark:bg-[#222327] border border-slate-200 dark:border-[#121214] rounded-lg focus:outline-none focus:border-brand-500 text-slate-900 dark:text-white text-sm transition-colors"
+              className="w-full h-11 px-4 bg-white dark:bg-[#222327] border border-slate-200 dark:border-[#121214] rounded-lg focus:outline-none focus:border-brand-500 text-slate-900 dark:text-white text-sm transition-colors"
             />
             
-            <div className="flex items-center gap-3 mt-1">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-1">
               <button 
                 onClick={handleUpdatePassword}
                 disabled={isUpdating || !newPassword}
-                className="bg-brand-500 text-slate-900 dark:text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-brand-600 disabled:opacity-50 transition-colors flex items-center gap-2 w-fit"
+                className="bg-brand-500 text-slate-900 dark:text-white h-11 px-5 rounded-lg text-sm font-medium hover:bg-brand-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 w-full sm:w-fit whitespace-nowrap"
               >
                 {isUpdating ? <Loader2 size={16} className="animate-spin" /> : "Save New Password"}
               </button>

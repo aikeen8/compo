@@ -43,7 +43,7 @@ export function NewFolderDialog({ onAddFolder }: NewFolderDialogProps) {
         </button>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-md dark:bg-[#222327] dark:text-slate-100 border-0 dark:border-[#121214] rounded-2xl shadow-xl transition-colors">
+      <DialogContent className="w-[92vw] max-w-md p-6 dark:bg-[#222327] dark:text-slate-100 border-0 dark:border-[#121214] rounded-[24px] shadow-2xl transition-colors">
         <DialogHeader>
           <DialogTitle className="text-slate-800 dark:text-slate-100">New Folder</DialogTitle>
         </DialogHeader>

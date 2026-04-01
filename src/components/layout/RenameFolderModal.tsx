@@ -20,7 +20,6 @@ export function RenameFolderModal({ currentName, onRename, children, open, onOpe
   const isOpen = isControlled ? open : internalOpen;
   const setIsOpen = isControlled ? onOpenChange : setInternalOpen;
 
-  // safely update state without useEffect
   if (isOpen !== prevIsOpen) {
     setPrevIsOpen(isOpen);
     if (isOpen) {
@@ -42,7 +41,7 @@ export function RenameFolderModal({ currentName, onRename, children, open, onOpe
         </DialogTrigger>
       )}
       
-      <DialogContent className="sm:max-w-md dark:bg-[#222327] dark:text-slate-100 border-0 dark:border-[#121214] rounded-2xl shadow-xl transition-colors">
+      <DialogContent className="w-[92vw] sm:max-w-md dark:bg-[#222327] dark:text-slate-100 border-0 dark:border-[#121214] rounded-[24px] shadow-xl transition-colors">
         <DialogHeader>
           <DialogTitle className="text-slate-800 dark:text-slate-100">Rename Folder</DialogTitle>
         </DialogHeader>

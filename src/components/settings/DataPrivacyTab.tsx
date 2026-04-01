@@ -50,7 +50,6 @@ export function DataPrivacyTab() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // fetch all active workspace data
       const [foldersRes, categoriesRes, itemsRes] = await Promise.all([
         supabase.from('folders').select('*').eq('user_id', user.id).neq('is_deleted', true).order('created_at', { ascending: true }),
         supabase.from('categories').select('*').eq('user_id', user.id).order('created_at', { ascending: true }),
@@ -61,7 +60,6 @@ export function DataPrivacyTab() {
       const safeCategories = categoriesRes.data || []
       const safeItems = itemsRes.data || []
 
-      // bundle it up so categories are inside folders, and items are inside categories
       const exportData = {
         exportedAt: new Date().toISOString(),
         folders: safeFolders.map(f => ({
@@ -73,7 +71,6 @@ export function DataPrivacyTab() {
         }))
       }
 
-      // turn the data into a downloadable json file
       const dataStr = JSON.stringify(exportData, null, 2)
       const blob = new Blob([dataStr], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
@@ -84,7 +81,6 @@ export function DataPrivacyTab() {
       document.body.appendChild(link)
       link.click()
       
-      // clean up
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
     } catch (error) {
@@ -114,15 +110,15 @@ export function DataPrivacyTab() {
           Set a 4-digit PIN to lock your private folders and notes. If you forget this PIN, you will not be able to access private items.
         </p>
 
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="relative w-full sm:w-auto">
             <input
               type={showPin ? "text" : "password"}
               maxLength={4}
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
               placeholder="0000"
-              className="w-28 pl-4 pr-10 py-2 text-center text-lg font-bold tracking-[0.3em] bg-white dark:bg-[#222327] border border-slate-200 dark:border-[#121214] rounded-lg focus:outline-none focus:border-brand-500 text-slate-900 dark:text-white transition-colors [&::-ms-reveal]:hidden [&::-webkit-reveal]:hidden"
+              className="w-full sm:w-32 pl-4 pr-10 h-11 text-center text-lg font-bold tracking-[0.3em] bg-white dark:bg-[#222327] border border-slate-200 dark:border-[#121214] rounded-lg focus:outline-none focus:border-brand-500 text-slate-900 dark:text-white transition-colors [&::-ms-reveal]:hidden [&::-webkit-reveal]:hidden"
             />
             <button
               onClick={() => setShowPin(!showPin)}
@@ -131,21 +127,24 @@ export function DataPrivacyTab() {
               {showPin ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
-          <button
-            onClick={handleSavePin}
-            disabled={pin.length !== 4 || isSaving}
-            className="px-4 py-2 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-medium rounded-lg transition-colors flex items-center gap-2 text-sm"
-          >
-            {isSaving ? <Loader2 size={16} className="animate-spin" /> : 'Save PIN'}
-          </button>
-          {pin && pin.length === 4 && (
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
-              onClick={handleRemovePin}
-              className="px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 font-medium rounded-lg transition-colors text-sm"
+              onClick={handleSavePin}
+              disabled={pin.length !== 4 || isSaving}
+              className="flex-1 sm:flex-none h-11 px-6 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
             >
-              Remove
+              {isSaving ? <Loader2 size={16} className="animate-spin" /> : 'Save PIN'}
             </button>
-          )}
+            {pin && pin.length === 4 && (
+              <button
+                onClick={handleRemovePin}
+                className="flex-1 sm:flex-none h-11 px-4 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 font-medium rounded-lg transition-colors text-sm whitespace-nowrap"
+              >
+                Remove
+              </button>
+            )}
+          </div>
         </div>
         {saved && <p className="text-brand-500 text-xs mt-3 font-medium">PIN saved successfully.</p>}
       </div>
@@ -158,7 +157,7 @@ export function DataPrivacyTab() {
         <button 
           onClick={handleExportData}
           disabled={isExporting}
-          className="p-2 text-slate-500 hover:bg-white dark:hover:bg-[#222327] hover:text-brand-500 disabled:opacity-50 disabled:hover:bg-transparent rounded-lg shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-[#121214] transition-all"
+          className="p-2 ml-2 flex-shrink-0 text-slate-500 hover:bg-white dark:hover:bg-[#222327] hover:text-brand-500 disabled:opacity-50 disabled:hover:bg-transparent rounded-lg shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-[#121214] transition-all"
         >
           {isExporting ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
         </button>

@@ -139,24 +139,24 @@ export default function Login() {
           
           <div className="flex justify-center mb-8 h-10">
             <div className="relative flex items-center">
-              <h1 className="text-4xl font-extrabold tracking-tight flex items-center opacity-0 pointer-events-none select-none whitespace-nowrap">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight flex items-center opacity-0 pointer-events-none select-none whitespace-nowrap">
                 compo<span className="text-brand-500">.</span>
-                <span className="w-1.5 h-8 ml-1"></span>
+                <span className="w-1.5 h-6 sm:h-8 ml-1"></span>
               </h1>
-              <h1 className="absolute left-0 text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center whitespace-nowrap">
+              <h1 className="absolute left-0 text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center whitespace-nowrap">
                 {logoText}
                 {logoText === fullLogoText && <span className="text-brand-500">.</span>}
-                <span className={`w-1.5 h-8 bg-brand-500 ml-1 rounded-sm ${logoText === fullLogoText ? 'animate-blink' : ''}`}></span>
+                <span className={`w-1.5 h-6 sm:h-8 bg-brand-500 ml-1 rounded-sm ${logoText === fullLogoText ? 'animate-blink' : ''}`}></span>
               </h1>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#1A1A1E] rounded-3xl shadow-lg shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-[#222327]/60 overflow-hidden transition-colors">
-            <div className="p-8">
-              <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+          <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] sm:rounded-3xl shadow-lg shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-[#222327]/60 overflow-hidden transition-colors">
+            <div className="p-6 sm:p-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">
                 {isForgotPassword ? "Reset password" : isSignUp ? "Create an account" : "Welcome back"}
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 sm:mb-8 leading-relaxed">
                 {isForgotPassword 
                   ? "Enter your email address and we'll send you a link to log back in."
                   : isSignUp 
@@ -167,7 +167,7 @@ export default function Login() {
               {(error || message) && (
                 <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 ${
                   error 
-                    ? 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400' 
+                    ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400' 
                     : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                 }`}>
                   {error ? <AlertCircle size={18} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={18} className="mt-0.5 shrink-0" />}
@@ -181,9 +181,9 @@ export default function Login() {
                     type="button"
                     onClick={handleGoogleLogin}
                     disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-[#222327] dark:hover:bg-[#2B2D31] text-slate-700 dark:text-slate-200 py-3 rounded-xl font-medium transition-all mb-6 border border-slate-200 dark:border-[#121214] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-[#222327] dark:hover:bg-[#2B2D31] text-slate-700 dark:text-slate-200 py-3 rounded-xl font-medium transition-all mb-6 border border-slate-200 dark:border-[#121214] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                   >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                       <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -194,20 +194,20 @@ export default function Login() {
 
                   <div className="flex items-center gap-4 mb-6">
                     <div className="h-px flex-1 bg-slate-200 dark:bg-[#222327]"></div>
-                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Or</span>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Or</span>
                     <div className="h-px flex-1 bg-slate-200 dark:bg-[#222327]"></div>
                   </div>
                 </>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                 <div>
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">
                     Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail size={18} className="text-slate-500 dark:text-slate-400" />
+                      <Mail size={18} className="text-slate-400" />
                     </div>
                     <input
                       type="email"
@@ -215,7 +215,7 @@ export default function Login() {
                       disabled={isLoading}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all disabled:opacity-50"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all disabled:opacity-50 text-sm sm:text-base"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -223,7 +223,7 @@ export default function Login() {
 
                 {!isForgotPassword && (
                   <div>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-wrap items-center justify-between mb-2 gap-x-2">
                       <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                         Password
                       </label>
@@ -243,7 +243,7 @@ export default function Login() {
                     </div>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Lock size={18} className="text-slate-500 dark:text-slate-400" />
+                        <Lock size={18} className="text-slate-400" />
                       </div>
                       <input
                         type="password"
@@ -251,7 +251,7 @@ export default function Login() {
                         disabled={isLoading}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all disabled:opacity-50"
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all disabled:opacity-50 text-sm sm:text-base"
                         placeholder="••••••••"
                       />
                     </div>
@@ -261,7 +261,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-slate-900 dark:text-white py-3 rounded-xl font-semibold transition-all active:scale-[0.98] mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-slate-900 dark:text-white py-3 rounded-xl font-semibold transition-all active:scale-[0.98] mt-2 sm:mt-4 disabled:opacity-70 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   {isLoading ? (
                     <Loader2 size={18} className="animate-spin" />
@@ -274,7 +274,7 @@ export default function Login() {
                 </button>
               </form>
 
-              <div className="mt-8 flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-sm text-slate-500 dark:text-slate-400 text-center">
                 {isForgotPassword ? (
                   <>
                     <p>Remember your password?</p>

@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react"
-import { ChevronDown, Trash2, FileText, CheckSquare, Timer, Lock, X, FolderPlus, Pencil, Shield, GripVertical } from "lucide-react"
+import { ChevronDown, Trash2, FileText, CheckSquare, Timer, Lock, X, FolderPlus, Pencil, Shield } from "lucide-react"
 import { FolderType } from "../../pages/Dashboard"
 import { CreateCategoryModal } from "./CreateCategoryModal"
 import { CreateItemModal } from "./CreateItemModal"
 import { RenameFolderModal } from "./RenameFolderModal"
 import { FolderPrivacyModal } from "./FolderPrivacyModal"
 import { Droppable, Draggable } from "@hello-pangea/dnd"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 interface SidebarInnerProps {
   isOpen: boolean;
@@ -164,6 +165,7 @@ export function SidebarInner({
                           
                           <div className="flex items-center justify-between px-2 group/cat">
                             <div 
+                              {...provided.dragHandleProps}
                               onClick={() => toggleCategory(category.id)}
                               className="flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer text-xs font-semibold tracking-wide uppercase transition-colors py-1 flex-1 truncate"
                             >
@@ -171,20 +173,14 @@ export function SidebarInner({
                               <span className="truncate">{category.name}</span>
                             </div>
                             
-                            <div className="flex items-center opacity-0 group-hover/cat:opacity-100 transition-opacity">
-                              <div 
-                                {...provided.dragHandleProps}
-                                className="p-1 mr-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-grab active:cursor-grabbing"
-                              >
-                                <GripVertical size={13} />
-                              </div>
+                            <div className={`flex items-center transition-opacity ${!isCollapsed ? 'opacity-100' : 'opacity-0 md:opacity-0 md:group-hover/cat:opacity-100'}`}>
                               <CreateItemModal 
                                 categoryName={category.name} 
                                 onAddItem={(name, type, isPrivate) => onAddItem(folder.id, category.id, name, type, isPrivate)} 
                               />
                               <button 
                                 onClick={() => onDeleteCategory(folder.id, category.id)}
-                                className="text-slate-400 hover:text-rose-500 transition-colors p-1"
+                                className="text-slate-400 hover:text-rose-500 transition-colors p-1 ml-0.5"
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -207,15 +203,18 @@ export function SidebarInner({
                                         <div 
                                           ref={provided.innerRef}
                                           {...provided.draggableProps}
-                                          {...provided.dragHandleProps}
-                                          onClick={() => onSelectItem(item.id)}
-                                          className={`flex items-center justify-between group/ch px-2 py-1.5 rounded cursor-pointer transition-colors ${
+                                          className={`flex items-center justify-between group/ch px-1 py-1 rounded transition-colors ${
                                             isActive 
                                               ? 'bg-slate-200 dark:bg-[#2B2D31] text-slate-900 dark:text-white' 
                                               : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-[#2B2D31] hover:text-slate-700 dark:hover:text-slate-300'
                                           } ${snapshot.isDragging ? 'shadow-lg bg-white dark:bg-[#222327] ring-1 ring-brand-500/50 z-50' : ''}`}
                                         >
-                                          <div className="flex items-center gap-1.5 overflow-hidden">
+                                          
+                                          <div 
+                                            {...provided.dragHandleProps}
+                                            onClick={() => onSelectItem(item.id)}
+                                            className="flex items-center gap-1.5 overflow-hidden flex-1 cursor-pointer py-1 pl-1"
+                                          >
                                             <span className="opacity-70 flex-shrink-0">
                                               {item.type === 'note' && <FileText size={16} />}
                                               {item.type === 'todo' && <CheckSquare size={16} />}
@@ -229,12 +228,15 @@ export function SidebarInner({
                                             {item.isPrivate && <Lock size={12} className="opacity-50 ml-1 flex-shrink-0" />}
                                           </div>
 
-                                          <button 
-                                            onClick={(e) => { e.stopPropagation(); onDeleteItem(folder.id, category.id, item.id); }}
-                                            className="opacity-0 group-hover/ch:opacity-100 text-slate-400 hover:text-rose-500 transition-colors ml-2"
-                                          >
-                                            <Trash2 size={14} />
-                                          </button>
+                                          <div className={`flex items-center transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 md:opacity-0 md:group-hover/ch:opacity-100'}`}>
+                                            <button 
+                                              onClick={(e) => { e.stopPropagation(); onDeleteItem(folder.id, category.id, item.id); }}
+                                              className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                                            >
+                                              <Trash2 size={14} />
+                                            </button>
+                                          </div>
+
                                         </div>
                                       )}
                                     </Draggable>
@@ -278,9 +280,9 @@ export function SidebarInner({
         onSave={(priv) => onUpdateFolderPrivacy(folder.id, priv)} 
       />
 
-      {deleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-3xl p-6 w-full max-w-sm shadow-xl">
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="w-[92vw] sm:max-w-sm dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-[24px] p-6 shadow-xl transition-colors">
+          <div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
               Delete folder?
             </h3>
@@ -305,8 +307,8 @@ export function SidebarInner({
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

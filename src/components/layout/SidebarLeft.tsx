@@ -4,6 +4,7 @@ import { NewFolderDialog } from "./NewFolderDialog"
 import { SettingsModal } from "./SettingsModal"
 import { FolderType } from "../../pages/Dashboard"
 import { Droppable, Draggable } from "@hello-pangea/dnd"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 interface SidebarLeftProps {
   folders: FolderType[];
@@ -117,9 +118,9 @@ export function SidebarLeft({ folders, activeFolderId, isSidebarOpen, onFolderCl
         </div>
       </aside>
 
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-3xl p-6 w-full max-w-sm shadow-xl">
+      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <DialogContent className="w-[92vw] sm:max-w-sm dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-[24px] p-6 shadow-xl transition-colors">
+          <div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
               Log out of compo?
             </h3>
@@ -138,14 +139,14 @@ export function SidebarLeft({ folders, activeFolderId, isSidebarOpen, onFolderCl
                   setShowLogoutConfirm(false)
                   onLogout()
                 }}
-                className="px-4 py-2.5 rounded-xl text-sm font-medium bg-red-500 hover:bg-red-600 text-white transition-colors"
+                className="px-4 py-2.5 rounded-xl text-sm font-medium bg-rose-500 hover:bg-rose-600 text-white transition-colors"
               >
                 Log out
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

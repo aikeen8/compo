@@ -29,7 +29,7 @@ export function AppearanceTab() {
       
       <div className="mb-10">
         <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Theme</h4>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <button
             onClick={() => setDraftTheme("light")}
             className={`flex-1 border-2 rounded-xl p-4 flex flex-col items-center gap-3 transition-all ${
@@ -103,7 +103,7 @@ export function AppearanceTab() {
       <div className="border-t border-slate-200 dark:border-[#1A1A1E] pt-6 flex justify-end transition-colors">
         <button 
           onClick={handleApply}
-          className="bg-brand-500 text-slate-900 dark:text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors"
+          className="bg-brand-500 text-slate-900 dark:text-white px-6 h-11 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors w-full sm:w-auto"
         >
           Apply Changes
         </button>

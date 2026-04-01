@@ -32,7 +32,7 @@ export function CreateItemModal({ categoryName, onAddItem }: CreateItemModalProp
         </button>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-md dark:bg-[#222327] dark:text-slate-100 border-0 dark:border-[#121214] rounded-2xl shadow-xl transition-colors p-0 overflow-hidden">
+      <DialogContent className="w-[92vw] max-w-md dark:bg-[#222327] dark:text-slate-100 border-0 dark:border-[#121214] rounded-[24px] shadow-xl transition-colors p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-4">
           <DialogTitle className="text-xl font-semibold text-slate-800 dark:text-slate-100">Create Item</DialogTitle>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase">in {categoryName}</p>
@@ -116,7 +116,7 @@ export function CreateItemModal({ categoryName, onAddItem }: CreateItemModalProp
                 <Lock size={16} /> Private Item
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[280px]">
-                Require authentication to open and view the contents of this item.
+                Require your 4-digit PIN to open and view the contents of this item.
               </p>
             </div>
             

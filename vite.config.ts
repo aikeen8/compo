@@ -15,14 +15,15 @@ export default defineConfig({
         theme_color: '#121214',
         background_color: '#121214',
         display: 'standalone',
+        start_url: '/',
         icons: [
           {
-            src: 'public/logo.png',
+            src: '/logo.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'public/logo.png',
+            src: '/logo.png',
             sizes: '512x512',
             type: 'image/png'
           }

@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { Lock } from "lucide-react"
 
 interface CategoryPrivacyModalProps {
@@ -14,7 +16,9 @@ export function CategoryPrivacyModal({ isPrivate, onSave, open, onOpenChange }: 
 
   if (open !== prevIsOpen) {
     setPrevIsOpen(open);
-    if (open) setPrivateState(isPrivate);
+    if (open) {
+      setPrivateState(isPrivate);
+    }
   }
 
   const handleSave = () => {
@@ -22,12 +26,13 @@ export function CategoryPrivacyModal({ isPrivate, onSave, open, onOpenChange }: 
     onOpenChange(false)
   }
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => onOpenChange(false)}>
-      <div className="w-[92vw] sm:max-w-md bg-white dark:bg-[#222327] border border-slate-200 dark:border-[#121214] rounded-[24px] p-6 shadow-xl transition-colors" onClick={e => e.stopPropagation()}>
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Privacy Settings</h3>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md dark:bg-[#222327] dark:text-slate-100 border-0 dark:border-[#121214] rounded-2xl shadow-xl transition-colors">
+        <DialogHeader>
+          <DialogTitle className="text-slate-800 dark:text-slate-100">Privacy Settings</DialogTitle>
+        </DialogHeader>
+        
         <div className="py-4">
           <div className="flex items-center justify-between bg-slate-50 dark:bg-[#1A1A1E] p-4 rounded-xl border border-slate-200 dark:border-[#121214] transition-colors">
             <div>
@@ -38,16 +43,25 @@ export function CategoryPrivacyModal({ isPrivate, onSave, open, onOpenChange }: 
                 Require your 4-digit PIN to open and view the contents of this category.
               </p>
             </div>
-            <button onClick={() => setPrivateState(!privateState)} className={`w-10 h-6 rounded-full transition-colors relative flex items-center px-1 ${privateState ? 'bg-brand-500' : 'bg-slate-300 dark:bg-slate-600'}`}>
+            
+            <button 
+              onClick={() => setPrivateState(!privateState)}
+              className={`w-10 h-6 rounded-full transition-colors relative flex items-center px-1 ${privateState ? 'bg-brand-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+            >
               <div className={`w-4 h-4 bg-white rounded-full transition-transform ${privateState ? 'translate-x-4' : 'translate-x-0'}`}></div>
             </button>
           </div>
         </div>
+        
         <div className="flex justify-end gap-3 mt-4">
-          <button onClick={() => onOpenChange(false)} className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] transition-colors">Cancel</button>
-          <button onClick={handleSave} className="px-4 py-2.5 rounded-xl text-sm font-medium bg-brand-500 hover:bg-brand-600 text-slate-900 dark:text-white transition-colors">Save Settings</button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="dark:hover:bg-[#1A1A1E] dark:text-slate-300">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} className="bg-brand-500 hover:bg-brand-600 text-slate-900 dark:text-white dark:bg-brand-500 dark:hover:bg-brand-600 transition-colors">
+            Save Settings
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

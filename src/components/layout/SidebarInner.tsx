@@ -6,7 +6,7 @@ import { CreateItemModal } from "./CreateItemModal"
 import { RenameFolderModal } from "./RenameFolderModal"
 import { FolderPrivacyModal } from "./FolderPrivacyModal"
 import { Droppable, Draggable } from "@hello-pangea/dnd"
-
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 interface SidebarInnerProps {
   isOpen: boolean;
@@ -280,9 +280,9 @@ export function SidebarInner({
         onSave={(priv) => onUpdateFolderPrivacy(folder.id, priv)} 
       />
 
-      {deleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setDeleteModalOpen(false)}>
-          <div className="w-[92vw] sm:max-w-sm bg-white dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-[24px] p-6 shadow-xl transition-colors" onClick={e => e.stopPropagation()}>
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="w-[92vw] sm:max-w-sm dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-[24px] p-6 shadow-xl transition-colors">
+          <div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
               Delete folder?
             </h3>
@@ -307,8 +307,8 @@ export function SidebarInner({
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

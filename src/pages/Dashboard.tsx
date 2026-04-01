@@ -78,7 +78,7 @@ export default function Dashboard() {
         <p>click the gear icon in the bottom left corner to open settings. from there, you can turn on dark mode, swap your accent color, and manage your account.</p>
         <p></p>
         <h3>🗑️ cleaning up</h3>
-        <p>this guide is a real note living in your database. i put it here so you could test things out. you can edit this text, click over to check off the dummy tasks, or run the timer. when you are ready for a clean slate, just hover over the "Getting Started" category in the sidebar and click the trash can to delete this entire folder.</p>
+        <p>this guide is a real note living in your database. i put it here so you could test things out. you can edit this text, click over to check off the dummy tasks, or run the timer. when you are ready for a clean slate, just click the "Welcome" folder name and choose delete folder from the dropdown todelete this entire folder.</p>
         <p></p>
         <p>#compo #focus #workspace</p>
       `

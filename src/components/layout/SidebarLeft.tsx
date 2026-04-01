@@ -4,7 +4,7 @@ import { NewFolderDialog } from "./NewFolderDialog"
 import { SettingsModal } from "./SettingsModal"
 import { FolderType } from "../../pages/Dashboard"
 import { Droppable, Draggable } from "@hello-pangea/dnd"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+
 
 interface SidebarLeftProps {
   folders: FolderType[];
@@ -118,9 +118,9 @@ export function SidebarLeft({ folders, activeFolderId, isSidebarOpen, onFolderCl
         </div>
       </aside>
 
-      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent className="w-[92vw] sm:max-w-sm dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-[24px] p-6 shadow-xl transition-colors">
-          <div>
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowLogoutConfirm(false)}>
+          <div className="w-[92vw] sm:max-w-sm bg-white dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-[24px] p-6 shadow-xl transition-colors" onClick={e => e.stopPropagation()}>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
               Log out of compo?
             </h3>
@@ -145,8 +145,8 @@ export function SidebarLeft({ folders, activeFolderId, isSidebarOpen, onFolderCl
               </button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </>
   )
 }

@@ -1,7 +1,4 @@
 import { useState, ReactNode } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 
 interface CreateCategoryModalProps {
   onAddCategory: (name: string) => void;
@@ -16,7 +13,7 @@ export function CreateCategoryModal({ onAddCategory, children, open, onOpenChang
 
   const isControlled = open !== undefined && onOpenChange !== undefined;
   const isOpen = isControlled ? open : internalOpen;
-  const setIsOpen = isControlled ? onOpenChange : setInternalOpen;
+  const setIsOpen = isControlled ? onOpenChange! : setInternalOpen;
 
   const handleCreate = () => {
     if (!name.trim()) return;
@@ -26,41 +23,29 @@ export function CreateCategoryModal({ onAddCategory, children, open, onOpenChang
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(val) => {
-      setIsOpen(val);
-      if (!val) setName("");
-    }}>
-      {children && (
-        <DialogTrigger asChild>
-          {children}
-        </DialogTrigger>
+    <>
+      {children && <span onClick={() => setIsOpen(true)}>{children}</span>}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => { setIsOpen(false); setName(""); }}>
+          <div className="w-[92vw] sm:max-w-md bg-white dark:bg-[#222327] border border-slate-200 dark:border-[#121214] rounded-[24px] p-6 shadow-xl transition-colors" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Create Category</h3>
+            <div className="py-4">
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 block">Category Name</label>
+              <input
+                placeholder="New Category"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                className="w-full h-11 px-3 bg-slate-50 dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#121214] rounded-xl dark:text-white dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors"
+              />
+            </div>
+            <div className="flex justify-end gap-3 mt-4">
+              <button onClick={() => { setIsOpen(false); setName(""); }} className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] transition-colors">Cancel</button>
+              <button onClick={handleCreate} className="px-4 py-2.5 rounded-xl text-sm font-medium bg-brand-500 hover:bg-brand-600 text-slate-900 dark:text-white transition-colors">Create Category</button>
+            </div>
+          </div>
+        </div>
       )}
-      
-      <DialogContent className="w-[92vw] sm:max-w-md dark:bg-[#222327] dark:text-slate-100 border-0 dark:border-[#121214] rounded-[24px] shadow-xl transition-colors">
-        <DialogHeader>
-          <DialogTitle className="text-slate-800 dark:text-slate-100">Create Category</DialogTitle>
-        </DialogHeader>
-        
-        <div className="py-4">
-          <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 block">Category Name</label>
-          <Input 
-            placeholder="New Category" 
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-            className="bg-slate-50 dark:bg-[#1A1A1E] border-slate-200 dark:border-[#121214] dark:text-white dark:placeholder-slate-500 focus-visible:ring-brand-500 h-11 transition-colors"
-          />
-        </div>
-        
-        <div className="flex justify-end gap-3 mt-4">
-          <Button variant="ghost" onClick={() => setIsOpen(false)} className="dark:hover:bg-[#1A1A1E] dark:text-slate-300">
-            Cancel
-          </Button>
-          <Button onClick={handleCreate} className="bg-brand-500 hover:bg-brand-600 text-slate-900 dark:text-white dark:bg-brand-500 dark:hover:bg-brand-600 transition-colors">
-            Create Category
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    </>
   )
 }

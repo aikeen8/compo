@@ -7,7 +7,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.png'], 
+      // include the fallback icons here so they get cached
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'], 
       manifest: {
         name: 'compo',
         short_name: 'compo',
@@ -18,12 +19,12 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/icon.png', 
+            src: '/android-chrome-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/icon.png', 
+            src: '/android-chrome-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           }

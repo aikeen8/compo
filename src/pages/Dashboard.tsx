@@ -64,7 +64,24 @@ export default function Dashboard() {
         .insert({ user_id: userId, folder_id: fData.id, name: 'Getting Started' })
         .select().single()
 
-      const guideHTML = `<h2>welcome to compo! 🎉</h2>` 
+      const guideHTML = `
+        <h2>welcome to compo! 🎉</h2>
+        <p>i built compo to be a quiet place for your work. it keeps your notes, tasks, and time tracking all in one spot. here is how everything works.</p>
+        <p></p>
+        <h3>📁 folders & categories</h3>
+        <p>your workspace uses folders and categories to keep things neat. folders are the colorful icons on the far left. click the <strong>+</strong> button there to make a new one. inside a folder, you have categories. these act like dividers. use them to separate your personal stuff from your work projects.</p>
+        <p></p>
+        <h3>📝 notes, tasks, and timers</h3>
+        <p>hover your mouse over any category name in the sidebar. a hidden <strong>+</strong> button will show up. click it to add an item to that category. you can add a blank note, an interactive to-do list, or a pomodoro focus timer. everything you type saves automatically to your database.</p>
+        <p></p>
+        <h3>⚙️ settings & themes</h3>
+        <p>click the gear icon in the bottom left corner to open settings. from there, you can turn on dark mode, swap your accent color, and manage your account.</p>
+        <p></p>
+        <h3>🗑️ cleaning up</h3>
+        <p>this guide is a real note living in your database. i put it here so you could test things out. you can edit this text, click over to check off the dummy tasks, or run the timer. when you are ready for a clean slate, just hover over the "Getting Started" category in the sidebar and click the trash can to delete this entire folder.</p>
+        <p></p>
+        <p>#compo #focus #workspace</p>
+      `
 
       await supabase.from('items').insert([
         { user_id: userId, category_id: cData.id, name: 'how to use compo', type: 'note', title: 'Welcome to compo', content: guideHTML },

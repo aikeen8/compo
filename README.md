@@ -1,73 +1,58 @@
-# React + TypeScript + Vite
+<br />
+<div align="center">
+  <a href="https://github.com/aikeen8/compo">
+    <img src="src/assets/compo.png" alt="Logo" width="200">
+  </a>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+  <h1 align="center">Compo</h1>
 
-Currently, two official plugins are available:
+  <p align="center">
+    <br />
+    <a href="https://compo-note.netlify.app"><strong>View Live Demo »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/aikeen8/compo/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/aikeen8/compo/issues">Request Feature</a>
+  </p>
+</div>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## About The Project
 
-## React Compiler
+Compo gives you a minimal workspace for your notes and to-do lists. It also includes a built-in timer to help you focus on your tasks. Everything stays organized in simple, drag-and-drop folders. It is designed to be just you and your work, without the clutter.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Table Of Contents
 
-## Expanding the ESLint configuration
+1. [About The Project](#about-the-project)
+    * [Features](#features)
+    * [Technologies Used](#technologies-used)
+2. [Application Snapshots](#application-snapshots)
+3. [Installation](#installation)
+    * [Prerequisites](#prerequisites)
+4. [Run](#run)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Features
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+* **smart organization:** group your notes and to-dos in custom color-coded folders.
+* **focus timer:** a built-in pomodoro timer to track your work sessions.
+* **drag and drop:** easily move folders around in your sidebar.
+* **Privacy Lock:** Keep your workspace private with a 4-digit PIN so only you can see your notes.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Built with
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+* react
+* typescript
+* tailwind css
+* supabase
+* vite
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Application Snapshots
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| **Login screen** | **Main content** |
+|:---:|:---:|
+|<img src="src/assets/login.png" alt="login" width="200"> | <img src="src/assets/maincontent.png" alt="maincontent" width="200"> |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+| **Mobile view** | **Focus timer** |
+|:---:|:---:|
+| <img src="src/assets/mobileview.png" alt="mobileview" width="200"> | <img src="src/assets/focustimer.png" alt="focustimer" width="200"> |
+

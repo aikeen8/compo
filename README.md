@@ -17,20 +17,6 @@
   </p>
 </div>
 
-## About The Project
-
-Compo gives you a minimal workspace for your notes and to-do lists. It also includes a built-in timer to help you focus on your tasks. Everything stays organized in simple, drag-and-drop folders. It is designed to be just you and your work, without the clutter.
-
-## Table Of Contents
-
-1. [About The Project](#about-the-project)
-    * [Features](#features)
-    * [Technologies Used](#technologies-used)
-2. [Application Snapshots](#application-snapshots)
-3. [Installation](#installation)
-    * [Prerequisites](#prerequisites)
-4. [Run](#run)
-
 ### Features
 
 * **smart organization:** group your notes and to-dos in custom color-coded folders.

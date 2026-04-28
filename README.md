@@ -36,9 +36,16 @@
 
 | **Login screen** | **Main content** |
 |:---:|:---:|
-|<img src="src/assets/login.png" alt="login" width="300"> | <img src="src/assets/maincontent.png" alt="maincontent" width="300"> |
+|<img src="src/assets/login.png" alt="login" width="330"> | <img src="src/assets/maincontent.png" alt="maincontent" width="330"> |
 
 | **Pomodoro** | **Settings** |
 |:---:|:---:|
-| <img src="src/assets/pomodoro.png" alt="pomodoro" width="300"> | <img src="src/assets/settings.png" alt="settings" width="300"> |
+| <img src="src/assets/pomodoro.png" alt="pomodoro" width="330"> | <img src="src/assets/settings.png" alt="settings" width="330"> |
+
+## Contributor
+
+| name | avatar | role | contributions |
+| :---: | :--- | :--- | :--- |
+| **[Kate Aikeen Fabiani](https://github.com/aikeen8)** | <img src="https://github.com/aikeen8.png" width="50" height="50" style="border: 2px solid #ccc;"> | Developer | Designed and built the entire application. |
+
 

@@ -36,9 +36,9 @@
 
 | **Login screen** | **Main content** |
 |:---:|:---:|
-|<img src="src/assets/login.png" alt="login" width="200"> | <img src="src/assets/maincontent.png" alt="maincontent" width="200"> |
+|<img src="src/assets/login.png" alt="login" width="300"> | <img src="src/assets/maincontent.png" alt="maincontent" width="300"> |
 
-| **Mobile view** | **Focus timer** |
+| **Pomodoro** | **Settings** |
 |:---:|:---:|
-| <img src="src/assets/mobileview.png" alt="mobileview" width="200"> | <img src="src/assets/focustimer.png" alt="focustimer" width="200"> |
+| <img src="src/assets/pomodoro.png" alt="pomodoro" width="300"> | <img src="src/assets/settings.png" alt="settings" width="300"> |
 

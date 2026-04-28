@@ -36,11 +36,11 @@
 
 | **Login screen** | **Main content** |
 |:---:|:---:|
-|<img src="src/assets/login.png" alt="login" width="330"> | <img src="src/assets/maincontent.png" alt="maincontent" width="330"> |
+|<img src="src/assets/login.png" alt="login" width="360"> | <img src="src/assets/maincontent.png" alt="maincontent" width="360"> |
 
 | **Pomodoro** | **Settings** |
 |:---:|:---:|
-| <img src="src/assets/pomodoro.png" alt="pomodoro" width="330"> | <img src="src/assets/settings.png" alt="settings" width="330"> |
+| <img src="src/assets/pomodoro.png" alt="pomodoro" width="360"> | <img src="src/assets/settings.png" alt="settings" width="360"> |
 
 ## Contributor
 

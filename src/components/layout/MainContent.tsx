@@ -54,12 +54,18 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
   const [showPin, setShowPin] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const stateRef = useRef({ id: activeItem?.id, title: localTitle })
 
   const needsPin = activeItem?.isPrivate || activeFolder?.isPrivate;
   
   const isUnlocked =
     (!activeFolder?.isPrivate || unlockedId === activeFolder?.id) &&
     (!activeItem?.isPrivate || unlockedId === activeItem?.id || unlockedId === activeFolder?.id);
+
+  useEffect(() => {
+    stateRef.current = { id: activeItem?.id, title: localTitle }
+  }, [activeItem?.id, localTitle])
 
   useEffect(() => {
     setPinInput("")
@@ -98,9 +104,9 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
       }),
     ],
     content: "",
-    onUpdate: ({ editor }) => {
-      if (activeItem && onUpdateItem) {
-        onUpdateItem(activeItem.id, localTitle, editor.getHTML());
+    onUpdate: ({ editor, transaction }) => {
+      if (transaction.docChanged && stateRef.current.id && onUpdateItem) {
+        onUpdateItem(stateRef.current.id, stateRef.current.title, editor.getHTML());
       }
     },
     editorProps: {
@@ -114,9 +120,9 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
     if (activeItem && editor && isUnlocked !== false) {
       if (editor.getHTML() !== activeItem.content) {
         if (activeItem.type === 'todo' && !activeItem.content) {
-          editor.commands.setContent('<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p></p></li></ul>');
+          editor.commands.setContent('<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p></p></li></ul>', { emitUpdate: false });
         } else {
-          editor.commands.setContent(activeItem.content || "");
+          editor.commands.setContent(activeItem.content || "", { emitUpdate: false });
         }
       }
     }

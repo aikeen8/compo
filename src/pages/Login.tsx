@@ -6,6 +6,8 @@ import { supabase } from "../lib/supabase"
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [isForgotPassword, setIsForgotPassword] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [verificationCode, setVerificationCode] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -33,20 +35,38 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      if (isForgotPassword) {
+      if (isVerifying) {
+        const { error } = await supabase.auth.verifyOtp({
+          email,
+          token: verificationCode,
+          type: 'signup'
+        })
+        if (error) throw error
+        setMessage("Verification successful! You can now sign in.")
+        setIsVerifying(false)
+        setIsSignUp(false)
+        setVerificationCode("")
+        setPassword("")
+      } else if (isForgotPassword) {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: window.location.origin,
         })
         if (error) throw error
         setMessage("Reset link sent! Click the link in your email to log in, then you can set a new password in Settings.")
       } else if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         })
         if (error) throw error
-        setMessage("Account created! Please check your email for the verification link.")
-        setPassword("")
+        
+        // If the identities array is empty, the user already exists
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          throw new Error("An account with this email already exists.")
+        }
+
+        setMessage("Please check your email for the 6-digit verification code.")
+        setIsVerifying(true)
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -85,6 +105,8 @@ export default function Login() {
   const toggleMode = () => {
     setIsSignUp(!isSignUp)
     setIsForgotPassword(false)
+    setIsVerifying(false)
+    setVerificationCode("")
     setError(null)
     setMessage(null)
   }
@@ -154,14 +176,16 @@ export default function Login() {
           <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] sm:rounded-3xl shadow-lg shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-[#222327]/60 overflow-hidden transition-colors">
             <div className="p-6 sm:p-8">
               <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">
-                {isForgotPassword ? "Reset password" : isSignUp ? "Create an account" : "Welcome back"}
+                {isVerifying ? "Verify your email" : isForgotPassword ? "Reset password" : isSignUp ? "Create an account" : "Welcome back"}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 sm:mb-8 leading-relaxed">
-                {isForgotPassword 
-                  ? "Enter your email address and we'll send you a link to log back in."
-                  : isSignUp 
-                    ? "Sign up to start organizing your workspace." 
-                    : "Enter your details to access your workspace."}
+                {isVerifying
+                  ? "Enter the 6-digit code sent to your email."
+                  : isForgotPassword 
+                    ? "Enter your email address and we'll send you a link to log back in."
+                    : isSignUp 
+                      ? "Sign up to start organizing your workspace." 
+                      : "Enter your details to access your workspace."}
               </p>
 
               {(error || message) && (
@@ -175,7 +199,7 @@ export default function Login() {
                 </div>
               )}
 
-              {!isForgotPassword && (
+              {!isForgotPassword && !isVerifying && (
                 <>
                   <button 
                     type="button"
@@ -201,27 +225,29 @@ export default function Login() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail size={18} className="text-slate-400" />
+                {!isVerifying && (
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail size={18} className="text-slate-400" />
+                      </div>
+                      <input
+                        type="email"
+                        required
+                        disabled={isLoading}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all disabled:opacity-50 text-sm sm:text-base"
+                        placeholder="you@example.com"
+                      />
                     </div>
-                    <input
-                      type="email"
-                      required
-                      disabled={isLoading}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all disabled:opacity-50 text-sm sm:text-base"
-                      placeholder="you@example.com"
-                    />
                   </div>
-                </div>
+                )}
 
-                {!isForgotPassword && (
+                {!isForgotPassword && !isVerifying && (
                   <div>
                     <div className="flex flex-wrap items-center justify-between mb-2 gap-x-2">
                       <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
@@ -258,6 +284,24 @@ export default function Login() {
                   </div>
                 )}
 
+                {isVerifying && (
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block text-center">
+                      Verification Code
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      disabled={isLoading}
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-[#121214] border border-slate-200 dark:border-[#222327] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 caret-brand-500 transition-all disabled:opacity-50 text-xl sm:text-2xl text-center tracking-[0.5em] font-mono"
+                      placeholder="000000"
+                      maxLength={6}
+                    />
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={isLoading}
@@ -267,7 +311,7 @@ export default function Login() {
                     <Loader2 size={18} className="animate-spin" />
                   ) : (
                     <>
-                      {isForgotPassword ? "Send Reset Link" : isSignUp ? "Create Account" : "Sign In"}
+                      {isVerifying ? "Verify Code" : isForgotPassword ? "Send Reset Link" : isSignUp ? "Create Account" : "Sign In"}
                       <ArrowRight size={18} />
                     </>
                   )}
@@ -275,22 +319,21 @@ export default function Login() {
               </form>
 
               <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-sm text-slate-500 dark:text-slate-400 text-center">
-                {isForgotPassword ? (
-                  <>
-                    <p>Remember your password?</p>
-                    <button
-                      onClick={() => {
-                        setIsForgotPassword(false);
-                        setError(null);
-                        setMessage(null);
-                      }}
-                      disabled={isLoading}
-                      className="font-bold text-slate-800 hover:text-brand-500 dark:text-slate-200 dark:hover:text-brand-400 transition-colors disabled:opacity-50"
-                      type="button"
-                    >
-                      Back to sign in
-                    </button>
-                  </>
+                {isForgotPassword || isVerifying ? (
+                  <button
+                    onClick={() => {
+                      setIsForgotPassword(false);
+                      setIsVerifying(false);
+                      setVerificationCode("");
+                      setError(null);
+                      setMessage(null);
+                    }}
+                    disabled={isLoading}
+                    className="font-bold text-slate-800 hover:text-brand-500 dark:text-slate-200 dark:hover:text-brand-400 transition-colors disabled:opacity-50"
+                    type="button"
+                  >
+                    Back to sign in
+                  </button>
                 ) : (
                   <>
                     <p>{isSignUp ? "Already have an account?" : "Don't have an account?"}</p>

@@ -39,9 +39,16 @@ const accentHexMap: Record<string, string> = {
   slate: '#64748b'
 }
 
+const fontClassMap: Record<string, string> = {
+  sans: 'font-sans',
+  serif: 'font-serif',
+  mono: 'font-mono'
+}
+
 export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMobileMenu }: MainContentProps) {
-  const { accent, customColor } = useTheme()
+  const { accent, customColor, font = 'sans', setFont } = useTheme()
   const activeColor = accent === 'custom' ? customColor : (accentHexMap[accent] || '#6366f1')
+  const activeFontClass = fontClassMap[font] || 'font-sans'
 
   const [localTitle, setLocalTitle] = useState("")
   const [prevItemId, setPrevItemId] = useState(activeItem?.id)
@@ -52,8 +59,11 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
   const [isFetchingPin, setIsFetchingPin] = useState(false)
   const [pinInput, setPinInput] = useState("")
   const [showPin, setShowPin] = useState(false)
+  
+  const [isFontMenuOpen, setIsFontMenuOpen] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const fontMenuRef = useRef<HTMLDivElement>(null)
   
   const stateRef = useRef({ id: activeItem?.id, title: localTitle })
 
@@ -62,6 +72,16 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
   const isUnlocked =
     (!activeFolder?.isPrivate || unlockedId === activeFolder?.id) &&
     (!activeItem?.isPrivate || unlockedId === activeItem?.id || unlockedId === activeFolder?.id);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (fontMenuRef.current && !fontMenuRef.current.contains(event.target as Node)) {
+        setIsFontMenuOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   useEffect(() => {
     stateRef.current = { id: activeItem?.id, title: localTitle }
@@ -259,7 +279,7 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
   const isTodo = activeItem.type === 'todo';
 
   return (
-    <main className="flex-1 h-screen bg-white dark:bg-[#222327] transition-colors duration-200 overflow-y-auto flex flex-col">
+    <main className="flex-1 h-screen bg-white dark:bg-[#222327] transition-colors duration-200 overflow-hidden flex flex-col">
       <style>{`
         :root {
           --hl-yellow: rgba(250, 204, 21, 0.4);
@@ -350,12 +370,47 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
         }
       `}</style>
       
-      <div className="h-14 border-b border-slate-200 dark:border-[#121214] flex items-center px-4 sm:px-6 gap-1 flex-shrink-0 bg-white/50 dark:bg-[#222327]/50 backdrop-blur-sm sticky top-0 z-10 overflow-x-auto scrollbar-none">
+      <div className="h-14 border-b border-slate-200 dark:border-[#121214] flex flex-wrap items-center px-4 sm:px-6 gap-1 flex-none bg-white dark:bg-[#222327] z-20 font-sans relative">
         <button onClick={onToggleMobileMenu} className="p-2 mr-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300 md:hidden flex-shrink-0">
           <Menu size={20} />
         </button>
+        
         {editor && (
           <>
+            <div className="relative flex-shrink-0 mr-1" ref={fontMenuRef}>
+              <button
+                onClick={() => setIsFontMenuOpen(!isFontMenuOpen)}
+                className={`p-2 w-16 rounded-lg transition-colors text-sm font-medium capitalize text-center ${isFontMenuOpen ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}
+              >
+                {font}
+              </button>
+
+              {isFontMenuOpen && (
+                <div className="absolute top-full left-0 mt-1 w-28 bg-white dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <button 
+                    onClick={() => { setFont('sans'); setIsFontMenuOpen(false); }} 
+                    className={`w-full text-left px-4 py-2 text-sm font-sans hover:bg-slate-50 dark:hover:bg-[#222327] transition-colors ${font === 'sans' ? 'text-brand-500 font-bold bg-slate-50 dark:bg-[#222327]' : 'text-slate-700 dark:text-slate-300'}`}
+                  >
+                    Sans
+                  </button>
+                  <button 
+                    onClick={() => { setFont('serif'); setIsFontMenuOpen(false); }} 
+                    className={`w-full text-left px-4 py-2 text-sm font-serif hover:bg-slate-50 dark:hover:bg-[#222327] transition-colors ${font === 'serif' ? 'text-brand-500 font-bold bg-slate-50 dark:bg-[#222327]' : 'text-slate-700 dark:text-slate-300'}`}
+                  >
+                    Serif
+                  </button>
+                  <button 
+                    onClick={() => { setFont('mono'); setIsFontMenuOpen(false); }} 
+                    className={`w-full text-left px-4 py-2 text-sm font-mono hover:bg-slate-50 dark:hover:bg-[#222327] transition-colors ${font === 'mono' ? 'text-brand-500 font-bold bg-slate-50 dark:bg-[#222327]' : 'text-slate-700 dark:text-slate-300'}`}
+                  >
+                    Mono
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="w-px h-6 bg-slate-200 dark:bg-[#121214] mx-2 flex-shrink-0"></div>
+
             <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleBold().run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive('bold') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <Bold size={16} /> </button>
             <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive('italic') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <Italic size={16} /> </button>
             <button onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleStrike().run()} className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive('strike') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}> <Strikethrough size={16} /> </button>
@@ -410,22 +465,26 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
         )}
       </div>
 
-      <div className="max-w-4xl w-full mx-auto px-6 pt-8 pb-20 md:px-20 md:pt-12 flex flex-col flex-1">
-        <input
-          type="text"
-          placeholder={isTodo ? "To-do List Title" : "Note Title"}
-          value={localTitle}
-          onChange={handleTitleChange}
-          className="text-3xl md:text-4xl font-bold bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder-slate-300 dark:placeholder-slate-600 mb-2 w-full transition-colors pb-3"
-        />
-        
-        <div className="flex items-center justify-between text-[11px] font-medium tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-8 px-1">
-          <span>Created {formatDateTime(activeItem.createdAt)}</span>
-          <span className="hidden sm:inline">Last edited {formatDateTime(activeItem.updatedAt)}</span>
+      <div className="flex-1 overflow-y-auto w-full transform-gpu">
+        <div className={`max-w-4xl w-full mx-auto px-6 pt-8 pb-32 md:px-20 md:pt-12 block ${activeFontClass}`}>
+          <input
+            type="text"
+            placeholder={isTodo ? "To-do List Title" : "Note Title"}
+            value={localTitle}
+            onChange={handleTitleChange}
+            style={{ WebkitFontSmoothing: 'antialiased', backfaceVisibility: 'hidden' }}
+            className="text-4xl md:text-5xl font-extrabold tracking-tight bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder-slate-300 dark:placeholder-slate-600 mb-2 w-full transition-colors pb-3 transform-gpu"
+          />
+          
+          <div className="flex items-center justify-between text-[11px] font-medium tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-8 px-1 font-sans">
+            <span>Created {formatDateTime(activeItem.createdAt)}</span>
+            <span className="hidden sm:inline">Last edited {formatDateTime(activeItem.updatedAt)}</span>
+          </div>
+
+          <EditorContent editor={editor} className="w-full" />
         </div>
-        
-        <EditorContent editor={editor} className="flex-1 w-full" />
       </div>
+
     </main>
   )
 }

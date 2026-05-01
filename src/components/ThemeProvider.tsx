@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 
 type Theme = "dark" | "light" | "system"
+type Font = "sans" | "serif" | "mono"
 
 // removed commas, tailwind requires spaces here
 const colorPalettes: Record<string, Record<string, string>> = {
@@ -37,6 +38,8 @@ type ThemeProviderState = {
   setAccent: (accent: string) => void
   customColor: string
   setCustomColor: (color: string) => void
+  font: Font
+  setFont: (font: Font) => void
 }
 
 const ThemeProviderContext = createContext<ThemeProviderState>({
@@ -46,6 +49,8 @@ const ThemeProviderContext = createContext<ThemeProviderState>({
   setAccent: () => null,
   customColor: "#6366f1",
   setCustomColor: () => null,
+  font: "sans",
+  setFont: () => null,
 })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -57,6 +62,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   )
   const [customColor, setCustomColor] = useState<string>(
     () => localStorage.getItem("compo-custom-color") || "#6366f1"
+  )
+  const [font, setFont] = useState<Font>(
+    () => (localStorage.getItem("compo-font") as Font) || "sans"
   )
 
   useEffect(() => {
@@ -83,7 +91,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     accent,
     setAccent: (a: string) => { localStorage.setItem("compo-accent", a); setAccent(a); },
     customColor,
-    setCustomColor: (c: string) => { localStorage.setItem("compo-custom-color", c); setCustomColor(c); }
+    setCustomColor: (c: string) => { localStorage.setItem("compo-custom-color", c); setCustomColor(c); },
+    font,
+    setFont: (f: Font) => { localStorage.setItem("compo-font", f); setFont(f); }
   }
 
   return (

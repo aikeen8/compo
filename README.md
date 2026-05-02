@@ -17,16 +17,6 @@
   </p>
 </div>
 
-### Changelog
-
-V1.1.0 - 2026-05-02
-
-| Type | Description |
-| :--- | :--- |
-| **Added** | custom font selection dropdown menu integrated directly into the editor toolbar. |
-| **Added** | table support for notes with options to add or delete rows and columns. |
-| **Fixed** | resolved a sub-pixel rendering bug causing the note title to jitter while scrolling. |
-
 ### Features
 
 * **smart organization:** group your notes and to-dos in custom color-coded folders.

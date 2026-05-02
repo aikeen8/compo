@@ -6,7 +6,11 @@ import TextAlign from '@tiptap/extension-text-align'
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
 import Image from '@tiptap/extension-image'
-import { Bold, Italic, Strikethrough, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, ListTodo, FileText, Lock, ShieldAlert, Loader2, Eye, EyeOff, Image as ImageIcon, Menu } from "lucide-react"
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
+import { Bold, Italic, Strikethrough, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, ListTodo, FileText, Lock, ShieldAlert, Loader2, Eye, EyeOff, Image as ImageIcon, Menu, Table as TableIcon } from "lucide-react"
 import { ItemType, FolderType } from "../../pages/Dashboard"
 import { useTheme } from "../ThemeProvider"
 import { PomodoroView } from "../pomodoro/PomodoroView"
@@ -61,9 +65,11 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
   const [showPin, setShowPin] = useState(false)
   
   const [isFontMenuOpen, setIsFontMenuOpen] = useState(false)
+  const [isTableMenuOpen, setIsTableMenuOpen] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const fontMenuRef = useRef<HTMLDivElement>(null)
+  const tableMenuRef = useRef<HTMLDivElement>(null)
   
   const stateRef = useRef({ id: activeItem?.id, title: localTitle })
 
@@ -77,6 +83,9 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
     function handleClickOutside(event: MouseEvent) {
       if (fontMenuRef.current && !fontMenuRef.current.contains(event.target as Node)) {
         setIsFontMenuOpen(false)
+      }
+      if (tableMenuRef.current && !tableMenuRef.current.contains(event.target as Node)) {
+        setIsTableMenuOpen(false)
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
@@ -122,6 +131,15 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
           class: 'rounded-xl max-w-full h-auto border border-slate-200 dark:border-[#222327] my-4',
         },
       }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: 'my-4',
+        },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: "",
     onUpdate: ({ editor, transaction }) => {
@@ -368,6 +386,54 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
           box-decoration-break: clone;
           -webkit-box-decoration-break: clone;
         }
+
+        /* Responsive Table Styles */
+        .tiptap .tableWrapper {
+          overflow-x: auto;
+          margin: 1.5rem 0;
+          /* Removed border and border-radius here to fix the empty space bug */
+        }
+        .tiptap table {
+          border-collapse: collapse;
+          table-layout: fixed;
+          width: 100%;
+          margin: 0;
+          overflow: hidden;
+        }
+        .tiptap td,
+        .tiptap th {
+          min-width: 1em;
+          border: 1px solid #cbd5e1;
+          padding: 0.5rem 0.75rem;
+          vertical-align: top;
+          box-sizing: border-box;
+          position: relative;
+        }
+        .dark .tiptap td,
+        .dark .tiptap th {
+          /* Brightened the border so it's visible against the dark background */
+          border-color: #475569; 
+        }
+        .tiptap th {
+          font-weight: normal; /* Force headers to not be bold */
+          text-align: left;
+          background-color: #f8fafc;
+        }
+        .dark .tiptap th {
+          background-color: #1A1A1E;
+        }
+        .tiptap .column-resize-handle {
+          background-color: #cbd5e1;
+          bottom: -2px;
+          position: absolute;
+          right: -2px;
+          pointer-events: none;
+          top: 0;
+          width: 4px;
+        }
+        .dark .tiptap .column-resize-handle {
+          background-color: #475569;
+        }
       `}</style>
       
       <div className="h-14 border-b border-slate-200 dark:border-[#121214] flex flex-wrap items-center px-4 sm:px-6 gap-1 flex-none bg-white dark:bg-[#222327] z-20 font-sans relative">
@@ -455,6 +521,41 @@ export function MainContent({ activeItem, activeFolder, onUpdateItem, onToggleMo
                 >
                   {isUploading ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
                 </button>
+
+                <div className="relative flex-shrink-0" ref={tableMenuRef}>
+                  <button 
+                    onClick={() => {
+                      if (!editor.isActive('table')) {
+                        // Changed to 2 columns, 1 row, and disabled the header row
+                        editor.chain().focus().insertTable({ rows: 1, cols: 2, withHeaderRow: false }).run()
+                      } else {
+                        setIsTableMenuOpen(!isTableMenuOpen)
+                      }
+                    }}
+                    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${editor.isActive('table') ? 'bg-slate-200 dark:bg-[#1A1A1E] text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] dark:hover:text-slate-300'}`}
+                    title="Insert or Edit Table"
+                  >
+                    <TableIcon size={16} />
+                  </button>
+
+                  {isTableMenuOpen && editor.isActive('table') && (
+                    <div className="absolute top-full left-0 mt-1 w-44 bg-white dark:bg-[#1A1A1E] border border-slate-200 dark:border-[#222327] rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                      <button onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsTableMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#222327] text-slate-700 dark:text-slate-300 transition-colors">Add Column Before</button>
+                      <button onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsTableMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#222327] text-slate-700 dark:text-slate-300 transition-colors">Add Column After</button>
+                      <button onClick={() => { editor.chain().focus().deleteColumn().run(); setIsTableMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500 transition-colors">Delete Column</button>
+                      
+                      <div className="h-px bg-slate-200 dark:bg-[#222327] my-1"></div>
+                      
+                      <button onClick={() => { editor.chain().focus().addRowBefore().run(); setIsTableMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#222327] text-slate-700 dark:text-slate-300 transition-colors">Add Row Before</button>
+                      <button onClick={() => { editor.chain().focus().addRowAfter().run(); setIsTableMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#222327] text-slate-700 dark:text-slate-300 transition-colors">Add Row After</button>
+                      <button onClick={() => { editor.chain().focus().deleteRow().run(); setIsTableMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500 transition-colors">Delete Row</button>
+                      
+                      <div className="h-px bg-slate-200 dark:bg-[#222327] my-1"></div>
+                      
+                      <button onClick={() => { editor.chain().focus().deleteTable().run(); setIsTableMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-bold hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500 transition-colors">Delete Table</button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
             

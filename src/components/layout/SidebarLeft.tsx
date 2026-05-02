@@ -113,7 +113,7 @@ export function SidebarLeft({ folders, activeFolderId, isSidebarOpen, onFolderCl
           </button>
 
           <span className="text-[10px] font-medium text-slate-300 dark:text-slate-600 mt-2">
-            v1.0.0
+            v1.1.0
           </span>
         </div>
       </aside>
